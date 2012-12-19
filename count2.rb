@@ -17,7 +17,7 @@ NUM_ENTRIES = 100
 NUM_STARTERS = 6
 NUM_PARTY = 3
 NUM_BATTLES = 4
-CHANGING = [nil] + Array.product((0..NUM_PARTY).to_a, 2)
+EXCHANGING = [nil] + Array.product((0..NUM_PARTY).to_a, 2)
 
 def main
   starters = (0...NUM_STARTERS).to_a
@@ -31,36 +31,36 @@ module Naive
   def count(prng, starters)
     set = Set.new
     starters.combination(NUM_PARTY).each do |player|
-      each_changing do |changing|
-        set.add choice_enemies(prng.dup, starters, player, changing)
+      each_exchanging do |exchanging|
+        set.add choice_enemies(prng.dup, starters, player, exchanging)
       end
     end
     set
   end
 
-  def each_changing
-      Array.each_product(CHANGING, NUM_BATTLES - 2) do |changing|
-        yield changing + [nil] # 最後の交換は影響しないから「なし」に固定していい
+  def each_exchanging
+      Array.each_product(EXCHANGING, NUM_BATTLES - 2) do |exchanging|
+        yield exchanging + [nil] # 最後の交換は影響しないから「なし」に固定していい
       end
   end
 
-  def choice_enemies(prng, starters, player, changing)
+  def choice_enemies(prng, starters, player, exchanging)
     result = []
     before = starters
     NUM_BATTLES.times do |i|
       enemy = choice_enemy_party(prng, before)
       result.push enemy
       before = player + enemy
-      player = exchange(player, enemy, changing[i])
+      player = exchange(player, enemy, exchanging[i])
     end
     result
   end
   
-  def exchange(player, enemy, changing)
-    if changing == nil
+  def exchange(player, enemy, exchanging)
+    if exchanging == nil
       player
     else
-      (i, j) = changing
+      (i, j) = exchanging
       player.dup.tap{|p| p[i] = enemy[j] }
     end
   end

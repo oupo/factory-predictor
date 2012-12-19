@@ -1,3 +1,4 @@
+# coding: utf-8
 require "set"
 require "pp"
 require_relative "prng.rb"
@@ -22,8 +23,32 @@ EXCHANGING = [nil] + Array.product((0..NUM_PARTY).to_a, 2)
 # TODO 実際にありえるパスかどうかを判定する必要がある
 def main
   starters = (0...NUM_STARTERS).to_a
-  x = Counter.count(PRNG.new(0), starters)
-  p x.size
+  prng = PRNG.new(rand(2**32))
+  p prng
+  x = Counter.count(prng, starters)
+  print_condition(x.to_a[0], starters)
+end
+
+# そのパスを通るために必要な条件を出力する
+def print_condition(result, starters)
+  p starters
+  pp result
+  maybe_players = []
+  before = starters
+  result.enemies.zip(result.skipped).each_with_index do |(enemy, skipped), i|
+    if 0 < i
+      enemy.each do |entry|
+        if maybe_players.include?(entry)
+          puts "#{entry} ∉ player[#{i-1}]"
+        end
+      end
+      skipped.each do |entry|
+        puts "#{entry} ∈ player[#{i-1}]"
+      end
+    end
+    maybe_players += before
+    before = enemy
+  end
 end
 
 class Counter

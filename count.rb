@@ -28,18 +28,18 @@ module Fast
     if chosen.length == NUM_PARTY
        return Set.new([chosen])
     end
-    x = prng.rand(NUM_ENTRIES)
+    prngp, x = prng.rand(NUM_ENTRIES)
     if (player_determined + chosen).include?(x)
       # 常にスキップ
-      count0(prng, starters, player_determined, chosen)
+      count0(prngp, starters, player_determined, chosen)
     elsif not starters.include?(x) or player_determined.length == NUM_PARTY
       # 常に採用
-      count0(prng, starters, player_determined, chosen + [x])
+      count0(prngp, starters, player_determined, chosen + [x])
     else
       # プレイヤーがxを持っていてスキップする場合
-      result1 = count0(prng.dup, starters, player_determined + [x], chosen)
+      result1 = count0(prngp, starters, player_determined + [x], chosen)
       # 採用する場合
-      result2 = count0(prng.dup, starters, player_determined, chosen + [x])
+      result2 = count0(prngp, starters, player_determined, chosen + [x])
 
       result1 + result2
     end
@@ -62,7 +62,7 @@ module Naive
   def choice_enemy_party(player, p)
     result = []
     while result.length < NUM_PARTY
-      x = p.rand(NUM_ENTRIES)
+      x = p.rand!(NUM_ENTRIES)
       if not result.include?(x) and not player.include?(x)
         result.push x
       end

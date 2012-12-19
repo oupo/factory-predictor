@@ -1,16 +1,17 @@
-class PRNG
-  def initialize(seed)
-    @seed = seed
+PRNG = Struct.new(:seed) # ==, eql?, hashのためにStructから作る
+
+PRNG.class_eval do
+  def rand(n)
+    p = dup()
+    [p, p.rand!(n)]
   end
 
-  attr_reader :seed
-
-  def rand(n)
+  def rand!(n)
     succ!
-    (@seed >> 16) % n
+    (seed >> 16) % n
   end
   
   def succ!
-    @seed = (@seed * 0x41c64e6d + 0x6073) & 0xffffffff
+    self.seed = (seed * 0x41c64e6d + 0x6073) & 0xffffffff
   end
 end

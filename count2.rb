@@ -36,15 +36,13 @@ def print_condition(result, starters)
   maybe_players = []
   before = starters
   result.enemies.zip(result.skipped).each_with_index do |(enemy, skipped), i|
-    if 0 < i
-      enemy.each do |entry|
-        if maybe_players.include?(entry)
-          puts "#{entry} ∉ player[#{i-1}]"
-        end
+    enemy.each do |entry|
+      if maybe_players.include?(entry)
+        puts "#{entry} ∉ player[#{i-1}]"
       end
-      skipped.each do |entry|
-        puts "#{entry} ∈ player[#{i-1}]"
-      end
+    end
+    skipped.each do |entry|
+      puts "#{entry} ∈ player[#{i-1}]"
     end
     maybe_players += before
     before = enemy

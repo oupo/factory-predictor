@@ -5,7 +5,7 @@
 # エントリーの衝突の判定はIDだけによるなど単純化
 
 require "set"
-require_relative "prng.rb"
+require_relative "../prng.rb"
 
 NUM_ENTRIES = 100
 NUM_STARTERS = 6

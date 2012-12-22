@@ -5,7 +5,7 @@ require_relative "prng.rb"
 require_relative "rough-predictor.rb"
 require_relative "judge-context.rb"
 
-NUM_ENTRIES = 30
+NUM_ENTRIES = 50
 NUM_STARTERS = 6
 NUM_PARTY = 3
 NUM_BATTLES = 7
@@ -19,8 +19,10 @@ def main
   prng = PRNG.new(0)
   p prng
   results = RoughPredictor.predict(prng, starters).to_a
-  results_filtered = results.select{|r| judge(r, starters) }
-  puts "#{results_filtered.size} / #{results.size}"
+  print_context results.last, starters
+  results.group_by{|r| judge(r, starters) }.each do |t, r|
+    puts "#{t}: #{r.size}"
+  end
 end
 
 def print_context(result, starters)
@@ -35,7 +37,14 @@ end
 
 def judge(result, starters)
   context = JudgeContext.from_predictor_result(result, starters)
-  assign_loop(context)
+  succeeded, requests, assigner = assign_loop(context)
+  if not succeeded
+    :ng
+  elsif requests == [] and bad_condition_satisfied?(context, assigner)
+    :ok
+  else
+    :unknown
+  end
 end
 
 # gate iの一つ手前でアイテムaを得て少なくともgate jまで保持し続けるという仕事を
@@ -62,6 +71,26 @@ def assign_loop(context)
       end
     end
   end while updated
+  [true, req.compact, assigner]
+end
+
+def bad_condition_satisfied?(context, assigner)
+  maybe_players = []
+  shop = context.shop
+  (2..N).each do |i|
+    # gate iの手前のshop
+    sh = shop[i-2]
+    if assigner.startable_num(i) == 0
+      maybe_players += assigner.assigned.select{|w| w.head == i }.map(&:item)
+    elsif assigner.covered_num(i) == M
+      # do nothing
+    else
+      maybe_players += sh
+    end
+
+    # gate i
+    return false if not (maybe_players & shop[i]).empty?
+  end
   true
 end
 
@@ -71,6 +100,8 @@ class Assigner
     @assigned = []
     @bad = bad
   end
+
+  attr_reader :assigned
   
   def assign(work)
     return if exist_similar_longer_work(work)
@@ -88,10 +119,18 @@ class Assigner
     assignable0(assigned, work)
   end
 
+  def startable_num(pos)
+    startable_num0(@assigned, pos)
+  end
+
+  def covered_num(pos)
+    covered_num0(@assigned, pos)
+  end
+
   private
   def assignable0(assigned, work)
-    work.range.all? {|i| covered_num(assigned, i) < M }\
-      and startable_num(assigned, work.head) >= 1 \
+    work.range.all? {|i| covered_num0(assigned, i) < M }\
+      and startable_num0(assigned, work.head) >= 1 \
       and pass_bad_condition(work)
   end
 
@@ -113,12 +152,12 @@ class Assigner
     i ? @assigned.dup.tap {|x| x.delete_at(i) } : @assigned
   end
 
-  def startable_num(assigned, pos)
+  def startable_num0(assigned, pos)
     max = pos == 2 ? M : 1
     max - assigned.count {|work| work.head == pos }
   end
 
-  def covered_num(assigned, pos)
+  def covered_num0(assigned, pos)
     assigned.count {|work| work.range.include?(pos) }
   end
 end

@@ -20,7 +20,7 @@ def main
   p prng
   results = RoughPredictor.predict(prng, starters).to_a
   results_filtered = results.select{|r| judge(r, starters) }
-  print_context results_filtered.last, starters
+  puts "#{results_filtered.size} / #{results.size}"
 end
 
 def print_context(result, starters)
@@ -48,16 +48,16 @@ end
 # 絶対に採用する必要があるworkを採用することを続ける
 def assign_loop(context)
   assigner = Assigner.new(context.shop)
-  requests = context.requests.to_a
+  req = context.requests.dup
   begin
     updated = false
-    requests.each_with_index do |req, i|
-      next if req == nil
-      c = req.count {|r| assigner.assignable?(r) }
-      return false if c == 0
-      if c == 1
-        assigner.assign(req.find {|r| assigner.assignable?(r) })
-        requests[i] = nil
+    req.size.times do |i|
+      next if req[i] == nil
+      req[i] = req[i].select {|r| assigner.assignable?(r) }
+      return false if req[i].length == 0
+      if req[i].length == 1
+        assigner.assign(req[i].first)
+        req[i] = nil
         updated = true
       end
     end

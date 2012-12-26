@@ -16,12 +16,12 @@ M = NUM_PARTY
 # TODO 実際にありえるパスかどうかを判定する必要がある
 def main
   starters = (0...NUM_STARTERS).to_a
-  prng = PRNG.new(0)
-  p prng
-  results = RoughPredictor.predict(prng, starters).to_a
-  print_context results.last, starters
-  results.group_by{|r| judge(r, starters) }.each do |t, r|
-    puts "#{t}: #{r.size}"
+  20.times do |i|
+    seed = i
+    prng = PRNG.new(i)
+    results = RoughPredictor.predict(prng, starters).to_a
+    x = results.group_by{|r| judge(r, starters) }
+    puts "%.8x: ok=%d, ng=%d" % [seed, (x[true] || []).size, (x[false] || []).size]
   end
 end
 
@@ -33,18 +33,14 @@ def print_context(result, starters)
     puts "gate #{i+2}: #{gate[i+2]} : #{shop[i+2]}"
   end
   pp context.requests
+  succeeded, requests, assigner = assign_loop(context)
+  pp assigner.assigned
 end
 
 def judge(result, starters)
   context = JudgeContext.from_predictor_result(result, starters)
   succeeded, requests, assigner = assign_loop(context)
-  if not succeeded
-    :ng
-  elsif requests == [] and bad_condition_satisfied?(context, assigner)
-    :ok
-  else
-    :unknown
-  end
+  succeeded and judge0(context, assigner)
 end
 
 # gate iの一つ手前でアイテムaを得て少なくともgate jまで保持し続けるという仕事を
@@ -71,27 +67,44 @@ def assign_loop(context)
       end
     end
   end while updated
+  p req.compact if req.compact.size > 0
   [true, req.compact, assigner]
 end
 
-def bad_condition_satisfied?(context, assigner)
-  maybe_players = []
+def judge0(context, assigner)
   shop = context.shop
+  assigned = assigner.assigned
+  player = nil
   (2..N).each do |i|
     # gate iの手前のshop
     sh = shop[i-2]
-    if assigner.startable_num(i) == 0
-      maybe_players += assigner.assigned.select{|w| w.head == i }.map(&:item)
-    elsif assigner.covered_num(i) == M
-      # do nothing
+    if i == 2
+      items = assigned.select{|w| w.head == i }.map(&:item)
+      player = items
+      player += (sh - items).sort_by{|item| -caught(context, item, i) }.take(M - items.size)
     else
-      maybe_players += sh
+      doing_work = assigned.select{|w| w.range.include?(i) and w.head != i }
+      player_desertable = player - doing_work.map(&:item)
+      a = player_desertable.min_by{|item| caught(context, item, i) }
+      work = assigned.find{|w| w.head == i }
+      if work
+        player = (player - [a]) + [work.item]
+      else
+        b = sh.max_by{|item| caught(context, item, i) }
+        if caught(context, a, i) < caught(context, b, i)
+          player = (player - [a]) + [b]
+        end
+      end
     end
 
     # gate i
-    return false if not (maybe_players & shop[i]).empty?
+    return false if not (player & shop[i]).empty?
   end
   true
+end
+
+def caught(context, item, pos)
+  (pos..N).find{|i| context.shop[i].include?(item) } || N+1
 end
 
 # 仕事の割り当て

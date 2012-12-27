@@ -98,8 +98,8 @@ class Judge
         player = items
         player += (sh - items).sort_by{|item| -caught(item, i) }.take(M - items.size)
       else
-        doing_work = schedule.select{|w| w.range.include?(i) and w.head != i }
-        player_desertable = player - doing_work.map(&:item)
+        current_works = schedule.select{|w| w.range.include?(i) and w.head != i }
+        player_desertable = player - current_works.map(&:item)
         a = player_desertable.min_by{|item| caught(item, i) }
         work = schedule.find{|w| w.head == i }
         if work

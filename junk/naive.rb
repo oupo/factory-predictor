@@ -17,7 +17,7 @@ NUM_ENTRIES = 30
 NUM_STARTERS = 6
 NUM_PARTY = 3
 NUM_BATTLES = 3
-EXCHANGING = [nil] + Array.product((0..NUM_PARTY).to_a, 2)
+EXCHANGING = [nil] + Array.product((0...NUM_PARTY).to_a, 2)
 
 def main
   starters = (0...NUM_STARTERS).to_a

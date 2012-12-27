@@ -1,7 +1,3 @@
-require "set"
-require "pp"
-require_relative "../prng.rb"
-
 def Array.product(x, n)
   Array.each_product(x, n).to_a
 end
@@ -13,22 +9,16 @@ def Array.each_product(x, n)
   end
 end
 
-NUM_ENTRIES = 30
-NUM_STARTERS = 6
-NUM_PARTY = 3
-NUM_BATTLES = 3
-EXCHANGING = [nil] + Array.product((0...NUM_PARTY).to_a, 2)
-
-def main
-  starters = (0...NUM_STARTERS).to_a
-  prng = PRNG.new(0)
-  pp Naive.count(prng, starters)
-end
 
 # 素朴にすべての選出と交換を試す方法
-module Naive
-  module_function
-  def count(prng, starters)
+class NaivePredictor
+  EXCHANGING = [nil] + Array.product((0...NUM_PARTY).to_a, 2)
+ 
+  def self.predict(prng, starters)
+    new().predict(prng, starters)
+  end
+
+  def predict(prng, starters)
     set = Set.new
     starters.combination(NUM_PARTY).each do |player|
       each_exchanging do |exchanging|
@@ -77,4 +67,3 @@ module Naive
   end
 end
 
-main() if $0 == __FILE__

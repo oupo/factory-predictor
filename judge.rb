@@ -1,28 +1,42 @@
 # coding: utf-8
 require "set"
 require "pp"
-require_relative "prng.rb"
-require_relative "rough-predictor.rb"
-require_relative "judge-context.rb"
 
-NUM_ENTRIES = 50
+NUM_ENTRIES = 30
 NUM_STARTERS = 6
 NUM_PARTY = 3
-NUM_BATTLES = 7
+NUM_BATTLES = 4
 
 N = NUM_BATTLES
 M = NUM_PARTY
 
-# TODO 実際にありえるパスかどうかを判定する必要がある
+require_relative "prng.rb"
+require_relative "rough-predictor.rb"
+require_relative "judge-context.rb"
+require_relative "naive.rb"
+
 def main
   starters = (0...NUM_STARTERS).to_a
-  20.times do |i|
-    seed = i
+  100.times do |i|
     prng = PRNG.new(i)
-    results = RoughPredictor.predict(prng, starters).to_a
-    x = results.group_by{|r| judge(r, starters) }
-    puts "%.8x: ok=%d, ng=%d" % [seed, (x[true] || []).size, (x[false] || []).size]
+    x = predict_fast(prng, starters)
+    y = predict_naive(prng, starters)
+    puts "#{i}: #{x.size} #{y.size}"
+    if x != y
+      puts "in fast, but not in naive: #{(x - y).inspect}"
+      puts "in naive, but not in fast: #{(y - x).inspect}"
+      puts "common: #{(x & y).inspect}"
+      exit
+    end
   end
+end
+
+def predict_fast(prng, starters)
+  RoughPredictor.predict(prng, starters).select{|x| judge(x, starters) }.map(&:enemies).to_set
+end
+
+def predict_naive(prng, starters)
+  NaivePredictor.predict(prng, starters)
 end
 
 def print_context(result, starters)

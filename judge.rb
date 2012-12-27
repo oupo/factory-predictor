@@ -32,29 +32,95 @@ def main
 end
 
 def predict_fast(prng, starters)
-  RoughPredictor.predict(prng, starters).select{|x| judge(x, starters) }.map(&:enemies).to_set
+  Predictor.predict(prng, starters).map(&:enemies).to_set
 end
 
 def predict_naive(prng, starters)
   NaivePredictor.predict(prng, starters)
 end
 
-def print_context(result, starters)
-  context = JudgeContext.from_predictor_result(result, starters)
-  shop, gate = context.shop, context.gate
-  (0..N - 2).each do |i|
-    puts "shop #{i}: #{shop[i]}"
-    puts "gate #{i+2}: #{gate[i+2]} : #{shop[i+2]}"
+class Predictor
+  def self.predict(prng, starters)
+    new().predict(prng, starters)
   end
-  pp context.requests
-  succeeded, requests, assigner = assign_loop(context)
-  pp assigner.assigned
+
+  def predict(prng, starters)
+    RoughPredictor.predict(prng, starters).select{|x| Judge.judge(x, starters) }
+  end
 end
 
-def judge(result, starters)
-  context = JudgeContext.from_predictor_result(result, starters)
-  succeeded, requests, assigner = assign_loop(context)
-  succeeded and judge0(context, assigner)
+class Judge
+  def initialize(result, starters)
+    @shop = (0..N).map {|i|
+      if i == 0
+        starters.dup
+      else
+        result.enemies[i-1].dup
+      end
+    }
+    @gate = (0..N).map {|i|
+      if i >= 2
+        result.skipped[i-1].dup
+      end
+    }
+  end
+
+  def self.judge(result, starters)
+    new(result, starters).judge()
+  end
+
+  def judge
+    schedule = assign_works()
+    schedule and judge0(schedule)
+  end
+  
+  def assign_works
+    assigner = Assigner.new
+    (2..N).each do |i|
+      @gate[i].each do |item|
+        j = (0..i-2).select {|j| @shop[j].include?(item) }.max
+        return nil if j == nil
+        work = Work.new(item, j + 2, i)
+        return nil if not assigner.assignable?(work)
+        assigner.assign work
+      end
+    end
+    assigner.assigned
+  end
+
+  def judge0(schedule)
+    player = nil
+    (2..N).each do |i|
+      # gate iの手前のshop
+      sh = @shop[i-2]
+      if i == 2
+        items = schedule.select{|w| w.head == i }.map(&:item)
+        player = items
+        player += (sh - items).sort_by{|item| -caught(item, i) }.take(M - items.size)
+      else
+        doing_work = schedule.select{|w| w.range.include?(i) and w.head != i }
+        player_desertable = player - doing_work.map(&:item)
+        a = player_desertable.min_by{|item| caught(item, i) }
+        work = schedule.find{|w| w.head == i }
+        if work
+          player = (player - [a]) + [work.item]
+        else
+          b = sh.max_by{|item| caught(item, i) }
+          if caught(a, i) < caught(b, i)
+            player = (player - [a]) + [b]
+          end
+        end
+      end
+
+      # gate i
+      return false if not (player & @shop[i]).empty?
+    end
+    true
+  end
+
+  def caught(item, pos)
+    (pos..N).find{|i| @shop[i].include?(item) } || N+1
+  end
 end
 
 # gate iの一つ手前でアイテムaを得て少なくともgate jまで保持し続けるという仕事を
@@ -64,68 +130,10 @@ Work.class_eval do
   def range() head..tail end
 end
 
-# 絶対に採用する必要があるworkを採用することを続ける
-def assign_loop(context)
-  assigner = Assigner.new(context.shop)
-  req = context.requests.dup
-  begin
-    updated = false
-    req.size.times do |i|
-      next if req[i] == nil
-      req[i] = req[i].select {|r| assigner.assignable?(r) }
-      return false if req[i].length == 0
-      if req[i].length == 1
-        assigner.assign(req[i].first)
-        req[i] = nil
-        updated = true
-      end
-    end
-  end while updated
-  p req.compact if req.compact.size > 0
-  [true, req.compact, assigner]
-end
-
-def judge0(context, assigner)
-  shop = context.shop
-  assigned = assigner.assigned
-  player = nil
-  (2..N).each do |i|
-    # gate iの手前のshop
-    sh = shop[i-2]
-    if i == 2
-      items = assigned.select{|w| w.head == i }.map(&:item)
-      player = items
-      player += (sh - items).sort_by{|item| -caught(context, item, i) }.take(M - items.size)
-    else
-      doing_work = assigned.select{|w| w.range.include?(i) and w.head != i }
-      player_desertable = player - doing_work.map(&:item)
-      a = player_desertable.min_by{|item| caught(context, item, i) }
-      work = assigned.find{|w| w.head == i }
-      if work
-        player = (player - [a]) + [work.item]
-      else
-        b = sh.max_by{|item| caught(context, item, i) }
-        if caught(context, a, i) < caught(context, b, i)
-          player = (player - [a]) + [b]
-        end
-      end
-    end
-
-    # gate i
-    return false if not (player & shop[i]).empty?
-  end
-  true
-end
-
-def caught(context, item, pos)
-  (pos..N).find{|i| context.shop[i].include?(item) } || N+1
-end
-
 # 仕事の割り当て
 class Assigner
-  def initialize(bad)
+  def initialize
     @assigned = []
-    @bad = bad
   end
 
   attr_reader :assigned
@@ -157,12 +165,7 @@ class Assigner
   private
   def assignable0(assigned, work)
     work.range.all? {|i| covered_num0(assigned, i) < M }\
-      and startable_num0(assigned, work.head) >= 1 \
-      and pass_bad_condition(work)
-  end
-
-  def pass_bad_condition(work)
-    work.range.all? {|i| not @bad[i].include?(work.item) }
+      and startable_num0(assigned, work.head) >= 1
   end
 
   def exist_similar_longer_work(work)

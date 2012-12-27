@@ -12,7 +12,6 @@ M = NUM_PARTY
 
 require_relative "prng.rb"
 require_relative "rough-predictor.rb"
-require_relative "judge-context.rb"
 require_relative "naive.rb"
 
 def main
@@ -154,18 +153,10 @@ class Assigner
     assignable0(assigned, work)
   end
 
-  def startable_num(pos)
-    startable_num0(@assigned, pos)
-  end
-
-  def covered_num(pos)
-    covered_num0(@assigned, pos)
-  end
-
   private
   def assignable0(assigned, work)
-    work.range.all? {|i| covered_num0(assigned, i) < M }\
-      and startable_num0(assigned, work.head) >= 1
+    work.range.all? {|i| covered_num(assigned, i) < M }\
+      and startable_num(assigned, work.head) >= 1
   end
 
   def exist_similar_longer_work(work)
@@ -182,12 +173,12 @@ class Assigner
     i ? @assigned.dup.tap {|x| x.delete_at(i) } : @assigned
   end
 
-  def startable_num0(assigned, pos)
+  def startable_num(assigned, pos)
     max = pos == 2 ? M : 1
     max - assigned.count {|work| work.head == pos }
   end
 
-  def covered_num0(assigned, pos)
+  def covered_num(assigned, pos)
     assigned.count {|work| work.range.include?(pos) }
   end
 end

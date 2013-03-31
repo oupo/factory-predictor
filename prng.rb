@@ -11,11 +11,6 @@ PRNG.class_eval do
     (seed >> 16) % n
   end
   
-  def rand!(n)
-    self.seed += 1
-    seed % n
-  end
-
   def succ!
     self.seed = (seed * 0x41c64e6d + 0x6073) & 0xffffffff
   end

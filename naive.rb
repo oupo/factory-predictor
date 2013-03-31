@@ -23,7 +23,7 @@ class NaivePredictor
   include EnvMixin 
 
   def predict(prng)
-    starters = FactoryHelper.choose_entries(prng, nStarters)
+    starters = FactoryHelper.choose_entries!(prng, nStarters)
     set = Set.new
     starters.combination(nParty).each do |player|
       each_exchanging do |exchanging|
@@ -44,7 +44,7 @@ class NaivePredictor
     result = []
     unchoosable = starters
     nBattles.times do |i|
-      enemy = FactoryHelper.choose_entries(prng, nParty, unchoosable)
+      enemy = FactoryHelper.choose_entries!(prng, nParty, unchoosable)
       result.push enemy
       unchoosable = player + enemy
       player = exchange(player, enemy, exchanging[i])

@@ -54,14 +54,20 @@ module FactoryHelper
   end
 
   def choose_entry(prng)
+    prngp = prng.dup
+    x = choose_entry!(prngp)
+    [prngp, x]
+  end
+
+  def choose_entry!(prng)
     i = prng.rand!(all_entries.size)
     all_entries[i]
   end
 
-  def choose_entries(prng, n, unchoosable=[])
+  def choose_entries!(prng, n, unchoosable=[])
     entries = []
     while entries.size < n
-      entry = choose_entry(prng)
+      entry = choose_entry!(prng)
       if not entry.collides_within?(entries + unchoosable)
         entries.push entry
       end

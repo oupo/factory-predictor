@@ -1,15 +1,25 @@
 require "set"
+require "pp"
 
 Dam = Struct.new(:id, :linked)
 
 def main
   num_dams_a = 5
   num_dams_b = 5
-  num_plants = 10
-  10.times do |i|
+  num_plants = 11
+  srand 0
+  r = {true => 0, false => 0}
+  1000.times do |i|
     env = gen(num_dams_a, num_dams_b, num_plants)
-    p [naive_solve(*env), greedy_solve(*env)]
+    ret1, ret2 = naive_solve(*env), greedy_solve(*env)
+    if (!!ret1) != (!!ret2)
+      p [ret1, ret2]
+      pp env
+      exit
+    end
+    r[!!ret1] += 1
   end
+  p r
 end
 
 def gen(num_dams_a, num_dams_b, num_plants)
@@ -29,7 +39,7 @@ def greedy_solve(dams_a, dams_b, plants)
   coverd = Set.new
   selected_dams = Set.new
 
-  3.times do |i|
+  6.times do |i|
     dams = Set.new
     dams += dams_a if (selected_dams & dams_a).size < 3
     dams += dams_b if (selected_dams & dams_b).size < 3
@@ -41,7 +51,7 @@ def greedy_solve(dams_a, dams_b, plants)
     selected_dams.add dam
     coverd += dam.linked
   end
-  coverd == plants.to_set
+  coverd == plants.to_set ? selected_dams : nil
 end
 
 def naive_solve(dams_a, dams_b, plants)
@@ -53,10 +63,10 @@ def naive_solve(dams_a, dams_b, plants)
           coverd.add plant
         end
       end
-      return true if coverd == plants.to_set
+      return (a + b).to_set if coverd == plants.to_set
     end
   end
-  false
+  nil
 end
 
 main() if $0 == __FILE__

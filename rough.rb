@@ -19,7 +19,13 @@ class Predictor
 
   def predict0(prng, skipped, chosen)
     if chosen.length == nParty
-      return Set.new([chosen])
+      return [chosen].to_set
+    end
+    # 3つのアイテムと種族を選んでskippedをカバーすることができないなら、
+    # skippedの全エントリーがplayersと衝突するような3つのエントリーplayersは
+    # 存在しないということなので、このルートはありえないとみなし空集合を返す
+    if not coverable?(skipped)
+      return [].to_set
     end
     prngp, x = choose_entry(prng)
     if x.collides_within?(chosen)
@@ -34,9 +40,56 @@ class Predictor
       result1 + result2
     end
   end
+
+  # アイテムと種族をそれぞれ3つずつ適当に選べば、それらでentriesをカバーできるかを判定する
+  # (注)
+  #   "1つの敵のエントリーの決定範囲には同じ種族が複数存在しないこと"を前提にしている
+  def coverable?(entries)
+    coverd = Set.new
+    selected_items = Set.new
+    all_items = entries.map(&:item).to_set
+    linked = Hash.new
+    entries.each do |entry|
+      (linked[entry.item] ||= Set.new).add entry
+    end
+
+    # カバーできるエントリーの個数についての貪欲法でアイテムを3つ選ぶ
+    nParty.times do |i|
+      items = all_items - selected_items
+      break if items.empty?
+      item = items.max_by {|item|
+        (linked[item] - coverd).size
+      }
+      selected_items.add item
+      coverd += linked[item]
+    end
+    # 残っているエントリーが3つ以下なら、それらの種族3つ選べばすべてカバーできることになる
+    (entries.to_set - coverd).size <= 3
+  end
+end
+
+class NaivePredictor
+  def initialize(env)
+    @env = env
+  end
+
+  attr_reader :env
+  include EnvMixin 
+  include FactoryHelper
+
+  def predict(prng)
+    result = Set.new
+    all_entries().combination(3) do |players|
+      result.add choose_entries(prng, nParty, players)
+    end
+    result
+  end
 end
 
 env = Env.new(nParty: 3, nStarters: 6, nBattles: 4)
-predictor = Predictor.new(env)
-pp predictor.predict(PRNG.new(0))
+result1 = Predictor.new(env).predict(PRNG.new(0))
+puts "#{result1.size} results."
+result2 = NaivePredictor.new(env).predict(PRNG.new(0))
+puts "#{result2.size} results."
+p result2.subset?(result1)
 

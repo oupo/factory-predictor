@@ -87,9 +87,15 @@ class NaivePredictor
 end
 
 env = Env.new(nParty: 3, nStarters: 6, nBattles: 4)
-result1 = Predictor.new(env).predict(PRNG.new(0))
-puts "#{result1.size} results."
-result2 = NaivePredictor.new(env).predict(PRNG.new(0))
-puts "#{result2.size} results."
-p result2.subset?(result1)
+100.times do |i|
+  seed = rand(2**32)
+  prng = PRNG.new(seed)
+  print "%.8x: " % seed
+  result1 = Predictor.new(env).predict(prng)
+  print "#{result1.size} results"
+  result2 = NaivePredictor.new(env).predict(prng)
+  print " / #{result2.size} results"
+  print " / #{result2.subset?(result1)}"
+  print "\n"
+end
 

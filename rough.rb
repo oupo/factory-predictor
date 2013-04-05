@@ -79,3 +79,5 @@ result1 = RoughPredictor.predict(env, prng)
 puts "#{result1.size} results."
 result2 = NaivePredictor.predict(env, prng)
 puts "#{result2.size} results."
+puts result2.subset?(result1)
+

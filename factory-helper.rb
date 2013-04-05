@@ -65,7 +65,9 @@ module FactoryHelper
   end
 
   def choose_entries(prng, n, unchoosable=[])
-    choose_entries!(prng.dup, n, unchoosable)
+    prngp = prng.dup
+    entries = choose_entries!(prng, n, unchoosable)
+    [prngp, entries]
   end
 
   def choose_entries!(prng, n, unchoosable=[])

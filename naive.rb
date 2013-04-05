@@ -22,12 +22,16 @@ class NaivePredictor
   attr_reader :env
   include EnvMixin 
 
+  def self.predict(env, prng)
+    new(env).predict(prng)
+  end
+
   def predict(prng)
-    starters = FactoryHelper.choose_entries!(prng, nStarters)
+    prng, starters = FactoryHelper.choose_entries(prng, nStarters)
     set = Set.new
     starters.combination(nParty).each do |player|
       each_exchanging do |exchanging|
-        set.add choose_enemies(prng.dup, starters, player, exchanging)
+        set.add choose_enemies(prng, starters, player, exchanging)
       end
     end
     set
@@ -44,7 +48,7 @@ class NaivePredictor
     result = []
     unchoosable = starters
     nBattles.times do |i|
-      enemy = FactoryHelper.choose_entries!(prng, nParty, unchoosable)
+      prng, enemy = FactoryHelper.choose_entries(prng, nParty, unchoosable)
       result.push enemy
       unchoosable = player + enemy
       player = exchange(player, enemy, exchanging[i])
@@ -62,7 +66,9 @@ class NaivePredictor
   end
 end
 
-env = Env.new(nParty: 3, nStarters: 6, nBattles: 4)
-predictor = NaivePredictor.new(env)
-pp predictor.predict(PRNG.new(0))
+if $0 == __FILE__
+  env = Env.new(nParty: 3, nStarters: 6, nBattles: 4)
+  predictor = NaivePredictor.new(env)
+  pp predictor.predict(PRNG.new(0))
+end
 

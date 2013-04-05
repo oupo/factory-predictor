@@ -18,18 +18,20 @@ class RoughPredictor
 
   def predict(prng)
     prng, starters = choose_entries(prng, nStarters)
-    predict0(prng, [], starters)
+    predict0(prng, [], [], starters)
   end
 
-  def predict0(prng, enemies, starters)
+  Result = Struct.new(:prng, :enemies, :skipped, :starters)
+
+  def predict0(prng, enemies, skipped, starters)
     if enemies.length == nBattles
-      return [enemies].to_set
+      return [Result.new(prng, enemies, skipped, starters)].to_set
     end
     unchoosable = enemies.last || starters
     maybe_players = starters + enemies[0..-2].flatten
     results = OneEnemyPredictor.predict(env, prng, unchoosable, maybe_players)
     results.map {|result|
-      predict0(result.prng, enemies + [result.chosen], starters)
+      predict0(result.prng, enemies + [result.chosen], skipped + [result.skipped], starters)
     }.inject(:+)
   end
 end
@@ -53,11 +55,11 @@ class OneEnemyPredictor
     predict0(prng, [], [])
   end
 
-  Result = Struct.new(:prng, :chosen)
+  Result = Struct.new(:prng, :chosen, :skipped)
 
   def predict0(prng, skipped, chosen)
     if chosen.length == nParty
-      return [Result.new(prng, chosen)].to_set
+      return [Result.new(prng, chosen, skipped)].to_set
     end
     prngp, x = choose_entry(prng)
     if x.collides_within?(@unchoosable + chosen + skipped)
@@ -80,7 +82,7 @@ if $0 == __FILE__
     seed = rand(2**32)
     print "%.8x: " % seed
     prng = PRNG.new(seed)
-    result1 = RoughPredictor.predict(env, prng)
+    result1 = RoughPredictor.predict(env, prng).map(&:enemies).to_set
     print "#{result1.size} results"
     result2 = NaivePredictor.predict(env, prng)
     print " / #{result2.size} results."

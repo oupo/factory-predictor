@@ -72,12 +72,18 @@ class OneEnemyPredictor
   end
 end
 
-require_relative "naive.rb"
-env = Env.new(nParty: 3, nStarters: 6, nBattles: 4)
-prng = PRNG.new(0)
-result1 = RoughPredictor.predict(env, prng)
-puts "#{result1.size} results."
-result2 = NaivePredictor.predict(env, prng)
-puts "#{result2.size} results."
-puts result2.subset?(result1)
+if $0 == __FILE__
+  require_relative "naive.rb"
+  env = Env.new(nParty: 3, nStarters: 6, nBattles: 4)
 
+  10.times do
+    seed = rand(2**32)
+    print "%.8x: " % seed
+    prng = PRNG.new(seed)
+    result1 = RoughPredictor.predict(env, prng)
+    print "#{result1.size} results"
+    result2 = NaivePredictor.predict(env, prng)
+    print " / #{result2.size} results."
+    puts " / #{result2.subset?(result1)}"
+  end
+end

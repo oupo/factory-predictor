@@ -20,6 +20,28 @@ Object.defineProperty(Array.prototype, "include", {
 	writable: true
 });
 
+Object.defineProperty(Array.prototype, "clone", {
+	value: function() {
+		return this.slice(0);
+	},
+	configurable: true,
+	enumerable: false,
+	writable: true
+});
+
+Object.defineProperty(Array.prototype, "count", {
+	value: function(predicate) {
+		var num = 0;
+		for (var x of this) {
+			if (predicate(x)) num += 1;
+		}
+		return num;
+	},
+	configurable: true,
+	enumerable: false,
+	writable: true
+});
+
 Object.defineProperty(Array.prototype, "diff", {
 	value: function(other) {
 		return this.filter(x => !other.include(x));
@@ -83,6 +105,17 @@ Object.defineProperty(Array.prototype, "max", {
 	writable: true
 });
 
+Object.defineProperty(Array.prototype, "findIndex", {
+	value: function(func) {
+		for (var i = 0; i < this.length; i ++) {
+			if (func(this[i])) return i;
+		}
+		return null;
+	},
+	configurable: true,
+	enumerable: false,
+	writable: true
+});
 
 Object.defineProperty(Array.prototype, "find", {
 	value: function(func) {

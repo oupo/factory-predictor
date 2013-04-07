@@ -1,16 +1,16 @@
 class Judge {
 	constructor(env, result) {
 		this.env = env;
-		this.shop = Util.range(0, nBattles).map(i => {
+		this.shop = Util.range(0, this.env.nBattles).map(i => {
 			if (i == 0) {
 				return result.starters.map(x => x.item);
 			} else {
 				return result.enemies[i-1].map(x => x.item);
 			}
 		});
-		this.gate = (0..nBattles).map(i =>
+		this.gate = Util.range(0, this.env.nBattles).map(i => {
 			if (i >= 2) {
-				return result.skipped[i-1].map(&:item)
+				return result.skipped[i-1].map(x => x.item);
 			}
 		});
 	}
@@ -25,12 +25,12 @@ class Judge {
 	}
 	
 	assign_works() {
-		let assigner = new Assigner.new(this.env);
-		for (let j of Util.range(2, nBattles)) {
+		let assigner = new Assigner(this.env);
+		for (let i of Util.range(2, this.env.nBattles)) {
 			for (let item of this.gate[i]) {
-				j = Util.range(0, i-2).filter(j => this.shop[j].include(item) }).max();
-				if (j == nil) return null;
-				work = new Work(item, j + 2, i);
+				let j = Util.range(0, i-2).filter(j => this.shop[j].include(item)).max();
+				if (j == null) return null;
+				let work = new Work(item, j + 2, i);
 				if (!assigner.assignable(work)) return null;
 				assigner.assign(work);
 			}
@@ -39,13 +39,13 @@ class Judge {
 	}
 
 	judge0(schedule) {
-		let player = nil;
-		for (let i of range(2, nBattles)) {
+		let player = null;
+		for (let i of Util.range(2, this.env.nBattles)) {
 			// gate iの手前のshop
 			let sh = this.shop[i-2];
 			if (i == 2) {
 				let items = schedule.filter(w => w.head == i).map(w => w.item);
-				player = [...items, ...(sh.diff(items).sortBy(item => -this.caught(item, i))].slice(nParty);
+				player = [...items, ...(sh.diff(items).sortBy(item => -this.caught(item, i)))].slice(this.env.nParty);
 			} else {
 				let current_works = schedule.filter(w => w.range.include(i) && w.head != i);
 				let player_desertable = player.diff(current_works.map(w => w.item));
@@ -62,7 +62,7 @@ class Judge {
 			}
 
 			// gate i
-			if (!(player.cap(this.shop[i]).isEmpty) {
+			if (!(player.cap(this.shop[i]).isEmpty)) {
 				return false;
 			}
 		}
@@ -70,72 +70,78 @@ class Judge {
 	}
 
 	caught(item, pos) {
-		return range(pos, nBattles).find(i => this.shop[i].include(item)) || nBattles+1;
+		return Util.range(pos, this.env.nBattles).find(i => this.shop[i].include(item)) || this.env.nBattles+1;
 	}
 }
 
-# gate iの一つ手前でアイテムaを得て少なくともgate jまで保持し続けるという仕事を
-# Work.new(a, i, j)で表す
-Work = Struct.new(:item, :head, :tail)
-Work.class_eval do
-	def range() head..tail end
-end
+// gate iの一つ手前でアイテムaを得て少なくともgate jまで保持し続けるという仕事を
+// Work.new(a, i, j)で表す
+class Work {
+	constructor(item, head, tail) {
+		this.item = item;
+		this.head = head;
+		this.tail = tail;
+		this.range = Util.range(head, tail);
+	}
+}
 
-# 仕事の割り当て
-class Assigner
-	initialize(env) {
-		@env = env
-		@assigned = []
+// 仕事の割り当て
+class Assigner {
+	constructor(env) {
+		this.env = env;
+		this.assigned = [];
 	}
 
-	attr_reader :env
-	include EnvMixin 
-
-	attr_reader :assigned
-	
 	assign(work) {
-		return if exist_similar_longer_work(work)
-		assigned = pick_similar_work(work)
-		if assignable0(assigned, work)
-			@assigned = assigned + [work]
-		else
-			raise "impossible"
+		if (this.exist_similar_longer_work(work)) return;
+		let assigned = this.pick_similar_work(work);
+		if (this.assignable0(assigned, work)) {
+			this.assigned = [...assigned, work];
+		} else {
+			throw "impossible";
 		}
 	}
 	
-	assignable?(work) {
-		return true if exist_similar_longer_work(work)
-		assigned = pick_similar_work(work)
-		assignable0(assigned, work)
+	assignable(work) {
+		if (this.exist_similar_longer_work(work)) {
+			return true;
+		}
+		let assigned = this.pick_similar_work(work);
+		return this.assignable0(assigned, work)
 	}
 
-	private
 	assignable0(assigned, work) {
-		work.range.all? {|i| covered_num(assigned, i) < nParty }\
-			and startable_num(assigned, work.head) >= 1
+		return work.range.every(i => this.covered_num(assigned, i) < this.env.nParty ) &&
+			this.startable_num(assigned, work.head) >= 1;
 	}
 
 	exist_similar_longer_work(work) {
-		i = find_similar_work(work)
-		i and work.tail <= @assigned[i].tail
+		let i = this.find_similar_work(work);
+		return i != null &&  work.tail <= this.assigned[i].tail;
 	}
 
 	find_similar_work(work) {
-		@assigned.find_index {|w| [w.item, w.head] == [work.item, work.head] }
+		return this.assigned.findIndex(w => [w.item, w.head] == [work.item, work.head]);
 	}
 
 	pick_similar_work(work) {
-		i = find_similar_work(work)
-		i ? @assigned.dup.tap {|x| x.delete_at(i) } : @assigned
+		let i = this.find_similar_work(work);
+		if (i) {
+			var assigned = this.assigned.clone();
+			assigned.splice(i, 1);
+			return assigned;
+		} else {
+			return this.assigned;
+		}
 	}
 
 	startable_num(assigned, pos) {
-		max = pos == 2 ? nParty : 1
-		max - assigned.count {|work| work.head == pos }
+		let max = pos == 2 ? this.env.nParty : 1;
+		return max - assigned.count(work => work.head == pos);
 	}
 
 	covered_num(assigned, pos) {
-		assigned.count {|work| work.range.include?(pos) }
+		return assigned.count(work => work.range.include(pos));
 	}
 }
 

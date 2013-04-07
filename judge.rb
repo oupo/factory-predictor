@@ -150,14 +150,15 @@ end
 if $0 == __FILE__
   require_relative "rough.rb"
   require_relative "naive.rb"
-  env = Env.new(nParty: 3, nStarters: 6, nBattles: 4)
-  10.times do
-    seed = rand(2**32)
+  env = Env.new(nParty: 3, nStarters: 6, nBattles: 7)
+  10.times do |i|
+    seed = i
     print "%.8x: " % seed
     prng = PRNG.new(seed)
     result = RoughPredictor.predict(env, prng)
     result_filtered = result.select{|x| Judge.judge(env, x) }.map(&:enemies).to_set
-    naive_result = NaivePredictor.predict(env, prng)
-    p result_filtered == naive_result
+    puts "#{result_filtered.size} / #{result.size}"
+    #naive_result = NaivePredictor.predict(env, prng)
+    #p result_filtered == naive_result
   end
 end

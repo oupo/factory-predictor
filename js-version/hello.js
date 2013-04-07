@@ -1,5 +1,7 @@
-var fs = require("fs");
+console.log(["a,5", "b,2", "c,3"].sortBy(x => Number(x.split(",")[1])))
+throw "";
 
+var fs = require("fs");
 
 var csvString = fs.readFileSync("entries.csv", "utf8");
 let allEntries = FactoryHelper.parseAllEntries(csvString);

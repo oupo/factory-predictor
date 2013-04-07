@@ -11,9 +11,101 @@ Object.defineProperty(Array.prototype, "flatten", {
 	writable: true
 });
 
+Object.defineProperty(Array.prototype, "include", {
+	value: function(x) {
+		return this.indexOf(x) >= 0;
+	},
+	configurable: true,
+	enumerable: false,
+	writable: true
+});
+
+Object.defineProperty(Array.prototype, "diff", {
+	value: function(other) {
+		return this.filter(x => !other.include(x));
+	},
+	configurable: true,
+	enumerable: false,
+	writable: true
+});
+
+Object.defineProperty(Array.prototype, "cap", {
+	value: function(other) {
+		return this.filter(x => other.include(x));
+	},
+	configurable: true,
+	enumerable: false,
+	writable: true
+});
+
+Object.defineProperty(Array.prototype, "sortBy", {
+	value: function(func) {
+		var keys = this.map(func);
+		return Util.iota(this.length).sort((a, b) => keys[a] - keys[b]).map(i => this[i]);
+	},
+	configurable: true,
+	enumerable: false,
+	writable: true
+});
+
+Object.defineProperty(Array.prototype, "minBy", {
+	value: function(keyOf) {
+		var min = null;
+		for (var x of this) {
+			if (min == null || keyOf(x) < keyOf(min)) min = x;
+		}
+		return min;
+	},
+	configurable: true,
+	enumerable: false,
+	writable: true
+});
+
+Object.defineProperty(Array.prototype, "maxBy", {
+	value: function(keyOf) {
+		var max = null;
+		for (var x of this) {
+			if (max == null || keyOf(max) < keyOf(x)) max = x;
+		}
+		return max;
+	},
+	configurable: true,
+	enumerable: false,
+	writable: true
+});
+
+Object.defineProperty(Array.prototype, "max", {
+	value: function() {
+		return this.maxBy(x => x);
+	},
+	configurable: true,
+	enumerable: false,
+	writable: true
+});
+
+
+Object.defineProperty(Array.prototype, "find", {
+	value: function(func) {
+		for (var x of this) {
+			if (func(x)) return x;
+		}
+		return null;
+	},
+	configurable: true,
+	enumerable: false,
+	writable: true
+});
+
 Object.defineProperty(Array.prototype, "last", {
 	get: function() {
 		return this[this.length - 1];
+	},
+	enumerable: false,
+});
+
+Object.defineProperty(Array.prototype, "isEmpty", {
+	get: function() {
+		return this.length == 0;
 	},
 	enumerable: false,
 });
@@ -23,5 +115,17 @@ class Util {
 		var array = str.split(sep);
 		if (array.last == "") array.pop();
 		return array;
+	}
+	
+	static range(start, end) {
+		var array = [];
+		for (var i = start; i <= end; i ++) {
+			array.push(i);
+		}
+		return array;
+	}
+	
+	static iota(n) {
+		return this.range(0, n-1);
 	}
 }

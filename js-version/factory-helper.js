@@ -22,6 +22,13 @@ class Env {
 }
 
 class FactoryHelper {
+	static parseAllEntries(csvString) {
+		return Util.split(csvString, "\n").map((line, i) => {
+			let [item, pokemon] = line.split(",").map(Number);
+			return new Entry(i, item, pokemon);
+		});
+	}
+	
 	static choose_entry(env, prng) {
 		let prngp = prng.dup();
 		let x = this.choose_entryQ(env, prngp);
@@ -31,6 +38,23 @@ class FactoryHelper {
 	static choose_entryQ(env, prng) {
 		let i = prng.randQ(env.allEntries.length);
 		return env.allEntries[i];
+	}
+	
+	static choose_entries(env, prng, n, unchoosable=[]) {
+		let prngp = prng.dup();
+		let x = this.choose_entriesQ(env, prngp, n, unchoosable);
+		return [prngp, x];
+	}
+	
+	static choose_entriesQ(env, prng, n, unchoosable=[]) {
+		let entries = [];
+		while (entries.length < n) {
+			entry = this.choose_entryQ(evn, prng);
+			if (!entry.collides_within([...entries, ...unchoosable])) {
+				entries.push(entry);
+			}
+		}
+		return entries;
 	}
 }
 

@@ -4,6 +4,7 @@ Object.defineProperty(Array.prototype, "flatten", {
 		for (var i = 0; i < this.length; i ++) {
 			ret.push(...this[i]);
 		}
+		return ret;
 	},
 	configurable: true,
 	enumerable: false,

@@ -25,7 +25,7 @@ class FactoryHelper {
 	static parseAllEntries(csvString) {
 		return Util.split(csvString, "\n").map((line, i) => {
 			let [item, pokemon] = line.split(",").map(Number);
-			return new Entry(i, item, pokemon);
+			return new Entry(i + 1, item, pokemon);
 		});
 	}
 	
@@ -49,7 +49,7 @@ class FactoryHelper {
 	static choose_entriesQ(env, prng, n, unchoosable=[]) {
 		let entries = [];
 		while (entries.length < n) {
-			entry = this.choose_entryQ(evn, prng);
+			let entry = this.choose_entryQ(env, prng);
 			if (!entry.collides_within([...entries, ...unchoosable])) {
 				entries.push(entry);
 			}

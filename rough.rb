@@ -77,6 +77,9 @@ end
 if $0 == __FILE__
   require_relative "naive.rb"
   env = Env.new(nParty: 3, nStarters: 6, nBattles: 4)
+  
+  pp RoughPredictor.predict(env, PRNG.new(0)).map(&:enemies)
+  exit
 
   10.times do
     seed = rand(2**32)

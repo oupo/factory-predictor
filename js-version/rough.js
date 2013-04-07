@@ -8,8 +8,8 @@ class RoughPredictor {
 	}
 
 	predict(prng) {
-		let [prng, starters] = FactoryHelper.choose_entries(this.env, prng, this.env.nStarters);
-		return predict0(prng, [], [], starters);
+		let [prngp, starters] = FactoryHelper.choose_entries(this.env, prng, this.env.nStarters);
+		return this.predict0(prngp, [], [], starters);
 	}
 
 	predict0(prng, enemies, skipped, starters) {
@@ -17,7 +17,7 @@ class RoughPredictor {
 			return [new RoughPredictorResult(prng, enemies, skipped, starters)];
 		}
 		let unchoosable = enemies.last || starters;
-		let maybe_players = starters + enemies.slice(0, -1).flatten();
+		let maybe_players = [...starters, ...enemies.slice(0, -1).flatten()];
 		let results = OneEnemyPredictor.predict(env, prng, unchoosable, maybe_players);
 		return results.map(result =>
 			this.predict0(result.prng, [...enemies, result.chosen], [...skipped, result.skipped], starters)
@@ -62,7 +62,7 @@ class OneEnemyPredictor {
 		} else {
 			let result1 = this.predict0(prngp, skipped, [...chosen, x])
 			let result2 = this.predict0(prngp, [...skipped, x], chosen)
-			return result1 + result2;
+			return [...result1, ...result2];
 		}
 	}
 }

@@ -45,7 +45,7 @@ class Judge {
 			let sh = this.shop[i-2];
 			if (i == 2) {
 				let items = schedule.filter(w => w.head == i).map(w => w.item);
-				player = [...items, ...(sh.diff(items).sortBy(item => -this.caught(item, i)))].slice(this.env.nParty);
+				player = [...items, ...(sh.diff(items).sortBy(item => -this.caught(item, i)))].slice(0, this.env.nParty);
 			} else {
 				let current_works = schedule.filter(w => w.range.include(i) && w.head != i);
 				let player_desertable = player.diff(current_works.map(w => w.item));
@@ -70,7 +70,8 @@ class Judge {
 	}
 
 	caught(item, pos) {
-		return Util.range(pos, this.env.nBattles).find(i => this.shop[i].include(item)) || this.env.nBattles+1;
+		let i = Util.range(pos, this.env.nBattles).find(i => this.shop[i].include(item));
+		return (i != null) ? i : this.env.nBattles+1;
 	}
 }
 

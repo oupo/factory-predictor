@@ -34,7 +34,7 @@ class FactoryHelper {
 		var data;
 		await data = Util.xhr(url);
 		var allEntries = this.parseAllEntries(data);
-		return Env({
+		return new Env({
 			nParty: options.nParty,
 			nStarters: options.nStarters,
 			nBattles: options.nBattles,

@@ -177,6 +177,6 @@ class Util {
 		};
 		xhr.open("GET", url, true);
 		xhr.send();
-		return xhr;
+		return deferred;
 	}
 }

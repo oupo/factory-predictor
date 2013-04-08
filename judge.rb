@@ -153,7 +153,6 @@ if $0 == __FILE__
   env = Env.new(nParty: 3, nStarters: 6, nBattles: 7)
   10.times do |i|
     seed = i
-    print "%.8x: " % seed
     prng = PRNG.new(seed)
     result = RoughPredictor.predict(env, prng)
     result_filtered = result.select{|x| Judge.judge(env, x) }.map(&:enemies).to_set

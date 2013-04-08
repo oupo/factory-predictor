@@ -122,12 +122,12 @@ class Assigner {
 	}
 
 	find_similar_work(work) {
-		return this.assigned.findIndex(w => [w.item, w.head] == [work.item, work.head]);
+		return this.assigned.findIndex(w => w.item == work.item && w.head == work.head);
 	}
 
 	pick_similar_work(work) {
 		let i = this.find_similar_work(work);
-		if (i) {
+		if (i != null) {
 			var assigned = this.assigned.clone();
 			assigned.splice(i, 1);
 			return assigned;

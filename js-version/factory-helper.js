@@ -29,6 +29,19 @@ class FactoryHelper {
 		});
 	}
 	
+	static buildEnv(options) {
+		var url = options.allEntriesURL;
+		var data;
+		await data = Util.xhr(url);
+		var allEntries = this.parseAllEntries(data);
+		return Env({
+			nParty: options.nParty,
+			nStarters: options.nStarters,
+			nBattles: options.nBattles,
+			allEntries: allEntries
+		});
+	}
+	
 	static choose_entry(env, prng) {
 		let prngp = prng.dup();
 		let x = this.choose_entryQ(env, prngp);

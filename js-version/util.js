@@ -161,4 +161,22 @@ class Util {
 	static iota(n) {
 		return this.range(0, n-1);
 	}
+	
+	static xhr(url) {
+		var xhr = new XMLHttpRequest();
+		var deferred = new Deferred;
+		xhr.onload = function() {
+			if (xhr.status == 200 || xhr.status == 0) {
+				deferred.callback(xhr.responseText);
+			} else {
+				deferred.errback();
+			}
+		};
+		xhr.onerror = function() {
+			errback();
+		};
+		xhr.open("GET", url, true);
+		xhr.send();
+		return xhr;
+	}
 }

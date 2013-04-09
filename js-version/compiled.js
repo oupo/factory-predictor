@@ -977,7 +977,7 @@ function main() {
           $state = 3;
           break;
         case 3:
-          document.body.innerHTML = "\n\t\t<form action=\"\" onsubmit=\"return false\">\n\t\tseed: <input type=\"text\" id=\"seed\" value=\"0\">\n\t\t<input type=\"submit\" value=\"実行\">\n\t\t</form>\n\t\t<div id=\"result\"></div>\n\t";
+          document.body.innerHTML = "\n\t\t<h1>factory-predictor</h1>\n\t\t<form action=\"\" onsubmit=\"return false\">\n\t\tseed: <input type=\"text\" id=\"seed\" value=\"0\">\n\t\t<input type=\"submit\" value=\"実行\">\n\t\t</form>\n\t\t<div id=\"result\"></div>\n\t";
           $state = 5;
           break;
         case 5:

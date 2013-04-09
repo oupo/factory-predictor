@@ -8,6 +8,7 @@ function main() {
 		allEntriesURL: "entries.csv"
 	});
 	document.body.innerHTML = `
+		<h1>factory-predictor</h1>
 		<form action="" onsubmit="return false">
 		seed: <input type="text" id="seed" value="0">
 		<input type="submit" value="実行">

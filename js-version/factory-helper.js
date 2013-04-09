@@ -24,7 +24,7 @@ class Env {
 class FactoryHelper {
 	static parseAllEntries(csvString) {
 		return Util.split(csvString, "\n").map((line, i) => {
-			let [item, pokemon] = line.split(",").map(Number);
+			let [pokemon, item] = line.split(",");
 			return new Entry(i + 1, item, pokemon);
 		});
 	}

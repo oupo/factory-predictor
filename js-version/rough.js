@@ -18,7 +18,7 @@ class RoughPredictor {
 		}
 		let unchoosable = enemies.last || starters;
 		let maybe_players = [...starters, ...enemies.slice(0, -1).flatten()];
-		let results = OneEnemyPredictor.predict(env, prng, unchoosable, maybe_players);
+		let results = OneEnemyPredictor.predict(this.env, prng, unchoosable, maybe_players);
 		return results.map(result =>
 			this.predict0(result.prng, [...enemies, result.chosen], [...skipped, result.skipped], starters)
 		).flatten();

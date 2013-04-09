@@ -1,3 +1,9 @@
+class Predictor {
+	static predict(env, prng) {
+		return RoughPredictor.predict(env, prng).filter(r => Judge.judge(env, r));
+	}
+}
+
 class Judge {
 	constructor(env, result) {
 		this.env = env;

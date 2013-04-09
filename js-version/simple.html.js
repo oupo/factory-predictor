@@ -1,5 +1,6 @@
-var env;
+if (!('console' in window)) window.console = {log: x => x}
 
+var env;
 function main() {
 	await env = FactoryHelper.buildEnv({
 		nParty: 3,

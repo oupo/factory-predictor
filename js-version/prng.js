@@ -1,4 +1,4 @@
-class PRNG {
+export class PRNG {
 	constructor(seed) {
 		this.seed = seed;
 	}

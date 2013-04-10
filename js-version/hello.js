@@ -1,3 +1,8 @@
+import * from "./predictor.js";
+import * from "./rough.js";
+import * from "./judge.js";
+import * from "./util.js";
+
 var fs = require("fs");
 
 var csvString = fs.readFileSync("entries.csv", "utf8");

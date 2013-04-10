@@ -1,4 +1,7 @@
-class RoughPredictor {
+import * from "./util.js";
+import * from "./factory-helper.js";
+
+export class RoughPredictor {
 	constructor(env) {
 		this.env = env;
 	}
@@ -26,7 +29,7 @@ class RoughPredictor {
 }
 
 
-class RoughPredictorResult {
+export class RoughPredictorResult {
 	constructor(prng, enemies, skipped, starters) {
 		this.prng = prng;
 		this.enemies = enemies;
@@ -35,7 +38,7 @@ class RoughPredictorResult {
 	}
 }
 
-class OneEnemyPredictor {
+export class OneEnemyPredictor {
 	constructor(env, unchoosable, maybe_players) {
 		this.env = env;
 		this.unchoosable = unchoosable;
@@ -67,7 +70,7 @@ class OneEnemyPredictor {
 	}
 }
 
-class OneEnemyPredictorResult {
+export class OneEnemyPredictorResult {
 	constructor(prng, chosen, skipped) {
 		this.prng = prng;
 		this.chosen = chosen;

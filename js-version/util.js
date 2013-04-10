@@ -143,7 +143,7 @@ Object.defineProperty(Array.prototype, "isEmpty", {
 	enumerable: false,
 });
 
-class Util {
+export class Util {
 	static split(str, sep) {
 		var array = str.split(sep);
 		if (array.last == "") array.pop();

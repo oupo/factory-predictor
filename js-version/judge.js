@@ -1,10 +1,7 @@
-class Predictor {
-	static predict(env, prng) {
-		return RoughPredictor.predict(env, prng).filter(r => Judge.judge(env, r));
-	}
-}
+import * from "./util.js";
+import * from "./factory-helper.js";
 
-class Judge {
+export class Judge {
 	constructor(env, result) {
 		this.env = env;
 		this.shop = Util.range(0, this.env.nBattles).map(i => {

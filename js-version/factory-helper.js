@@ -1,27 +1,7 @@
-class Entry {
-	constructor(id, item, pokemon) {
-		this.id = id;
-		this.item = item;
-		this.pokemon = pokemon;
-	}
-	collides_with(other) {
-		return this.item == other.item || this.pokemon == other.pokemon;
-	}
-	collides_within(entries) {
-		return entries.some(x => this.collides_with(x))
-	}
-}
+import * from "./util.js";
+import * from "./env.js";
 
-class Env {
-	constructor(options) {
-		this.nParty = options.nParty;
-		this.nStarters = options.nStarters;
-		this.nBattles = options.nBattles;
-		this.allEntries = options.allEntries;
-	}
-}
-
-class FactoryHelper {
+export class FactoryHelper {
 	static parseAllEntries(csvString) {
 		return Util.split(csvString, "\n").map((line, i) => {
 			let [pokemon, item] = line.split(",");

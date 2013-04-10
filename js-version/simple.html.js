@@ -1,3 +1,5 @@
+import * from "./predictor.js";
+import * from "./util.js";
 if (!('console' in window)) window.console = {log: x => x}
 
 var env;

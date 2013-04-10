@@ -1,5 +1,6 @@
 export * from "./env.js";
 export * from "./prng.js";
+export * from "./factory-helper.js";
 import * from "./util.js";
 import * from "./rough.js";
 import * from "./judge.js";

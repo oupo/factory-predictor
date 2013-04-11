@@ -65,7 +65,7 @@ export class Judge {
 			}
 
 			// gate i
-			if (!(player.cap(this.shop[i]).isEmpty)) {
+			if (!(player.cap(this.shop[i]).isEmpty())) {
 				return false;
 			}
 		}

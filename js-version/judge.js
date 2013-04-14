@@ -45,23 +45,10 @@ export class Judge {
 		let player = null;
 		for (let i of Util.range(2, this.env.nBattles)) {
 			// gate iの手前のshop
-			let sh = this.shop[i-2];
 			if (i == 2) {
-				let items = schedule.filter(w => w.head == i).map(w => w.item);
-				player = [...items, ...(sh.diff(items).sortBy(item => -this.caught(item, i)))].slice(0, this.env.nParty);
+				player = this.greedy_select_starters(schedule, i);
 			} else {
-				let current_works = schedule.filter(w => w.range.include(i) && w.head != i);
-				let player_desertable = player.diff(current_works.map(w => w.item));
-				let a = player_desertable.minBy(item => this.caught(item, i));
-				let work = schedule.find(w => w.head == i);
-				if (work) {
-					player = [...player.diff([a]), work.item];
-				} else {
-					let b = sh.maxBy(item => this.caught(item, i));
-					if (this.caught(a, i) < this.caught(b, i)) {
-						player = [...player.diff([a]), b];
-					}
-				}
+				player = this.greedy_exchange(schedule, i, player);
 			}
 
 			// gate i
@@ -70,6 +57,30 @@ export class Judge {
 			}
 		}
 		return true;
+	}
+
+	greedy_select_starters(schedule, i) {
+		let sh = this.shop[i-2];
+		let items = schedule.filter(w => w.head == i).map(w => w.item);
+		return [...items, ...(sh.diff(items).sortBy(item => -this.caught(item, i)))].slice(0, this.env.nParty);
+	}
+	
+	greedy_exchange(schedule, i, player) {
+		let sh = this.shop[i-2];
+		let current_works = schedule.filter(w => w.range.include(i) && w.head != i);
+		let player_desertable = player.diff(current_works.map(w => w.item));
+		let a = player_desertable.minBy(item => this.caught(item, i));
+		let work = schedule.find(w => w.head == i);
+		if (work) {
+			return [...player.diff([a]), work.item];
+		} else {
+			let b = sh.maxBy(item => this.caught(item, i));
+			if (this.caught(a, i) < this.caught(b, i)) {
+				return [...player.diff([a]), b];
+			} else {
+				return player;
+			}
+		}
 	}
 
 	caught(item, pos) {

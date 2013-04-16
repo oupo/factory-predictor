@@ -24,23 +24,24 @@ INF = Float::INFINITY
 
 def max_flow(g, s, t)
 	flow = 0
+	flows = Hash.new(0)
 	while true
 		used = Hash.new(false)
-		f = dfs(g, used, s, t, INF)
+		f = dfs(g, used, flows, s, t, INF)
 		return flow if f == 0
 		flow += f
 	end
 end
 
-def dfs(g, used, v, t, f)
+def dfs(g, used, flows, v, t, f)
 	return f if v == t
 	used[v] = true
 	g[v].each do |e|
-		if not used[e.to] and e.cap > 0
-			d = dfs(g, used, e.to, t, [f, e.cap].min)
+		if not used[e.to] and e.cap - flows[e] > 0
+			d = dfs(g, used, flows, e.to, t, [f, e.cap - flows[e]].min)
 			if d > 0
-				e.cap -= d
-				g[e.to][e.rev].cap += d
+				flows[e] += d
+				flows[g[e.to][e.rev]] -= d
 				return d
 			end
 		end

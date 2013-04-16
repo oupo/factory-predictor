@@ -1,8 +1,9 @@
 export class Entry {
-	constructor(id, item, pokemon) {
+	constructor(id, item, pokemon, nature) {
 		this.id = id;
 		this.item = item;
 		this.pokemon = pokemon;
+		this.nature = nature;
 	}
 	collides_with(other) {
 		return this.item == other.item || this.pokemon == other.pokemon;

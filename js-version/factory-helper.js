@@ -3,9 +3,11 @@ import * from "./env.js";
 
 export class FactoryHelper {
 	static parseAllEntries(csvString) {
+		const NATURE_NAMES = "がんばりや さみしがり ゆうかん いじっぱり やんちゃ ずぶとい すなお のんき わんぱく のうてんき おくびょう せっかち まじめ ようき むじゃき ひかえめ おっとり れいせい てれや うっかりや おだやか おとなしい なまいき しんちょう きまぐれ".split(" ");
 		return Util.split(csvString, "\n").map((line, i) => {
-			let [pokemon, item] = line.split(",");
-			return new Entry(i + 1, item, pokemon);
+			let [pokemon, item, natureName] = line.split(",");
+			let nature = NATURE_NAMES.indexOf(natureName);
+			return new Entry(i + 1, item, pokemon, nature);
 		});
 	}
 	
@@ -48,6 +50,22 @@ export class FactoryHelper {
 			}
 		}
 		return entries;
+	}
+
+	static _pid_loop(env, prng, entries) {
+		for (let entry of entries) {
+			let trainer_id = this._rand32Q(prng);
+			while (true) {
+				let pid = this._rand32Q(prng);
+				if (pid % 25 == entry.nature) break;
+			}
+		}
+	}
+
+	static _rand32Q(prng) {
+		let low = prng.randQ(0x10000);
+		let high = prng.randQ(0x10000);
+		return (high << 16 | low) >>> 0;
 	}
 }
 

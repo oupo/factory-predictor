@@ -1,13 +1,54 @@
-def main
+def main()
 	g = {}
-	add_edge g, :s, :a, 100
-	add_edge g, :s, :b, 2
-	add_edge g, :a, :b, 6
-	add_edge g, :a, :c, 6
-	add_edge g, :b, :t, 5
-	add_edge g, :c, :b, 3
-	add_edge g, :c, :t, 8
-	p max_flow(g, :s, :t)
+	add_edge g, :s, :u, 10
+	add_edge_with_min g, :u, :v, 3, 5
+	add_edge g, :v, :t, 10
+	p max_flow(g, :S, :T)
+	add_edge g, :S, :s, INF
+	add_edge g, :t, :T, INF
+	p max_flow(g, :S, :T)
+end
+
+def graph_solve(dams_a, dams_b, plants)
+	g = {}
+	add_edge g, :s, :A, 3
+	add_edge g, :s, :B, 3
+	dams_a.each do |dam|
+		add_edge g, :A, :"dam_#{dam.id}", 1
+	end
+	dams_b.each do |dam|
+		add_edge g, :B, :"dam_#{dam.id}", 1
+	end
+
+	dams = dams_a + dams_b
+	dams.each do |dam|
+		dam.linked.each do |plant|
+			add_edge g, :"dam_#{dam.id}", :"plant_#{plant}", 1
+		end
+	end
+	
+	plants.each do |plant|
+		add_edge_with_min g, :"plant_#{plant}", :"plant_out_#{plant}", 1, INF
+	end
+	
+	plants.each do |plant|
+		add_edge g, :"plant_out_#{plant}", :t, INF
+	end
+	
+	m = plants.size
+	if max_flow(g, :S, :T) >= m
+		add_edge g, :S, :s, INF
+		add_edge g, :t, :T, INF
+		max_flow(g, :S, :T) - m
+	else
+		:impossible
+	end
+end
+
+def add_edge_with_min(g, from, to, min, max)
+	add_edge g, from, to, max - min
+	add_edge g, :S, to, min
+	add_edge g, from, :T, min
 end
 
 Edge = Struct.new(:to, :cap, :rev)

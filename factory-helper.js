@@ -52,7 +52,31 @@ export class FactoryHelper {
 		return entries;
 	}
 
-	static _pid_loop(env, prng, entries) {
+	static choose_starters(env, prng) {
+		let prngp = prng.dup();
+		let starters = this.choose_startersQ(env, prngp);
+		return [prngp, starters];
+	}
+
+	static choose_startersQ(env, prng) {
+		let starters = this.choose_entriesQ(env, prng, env.nStarters);
+		this._pid_loopQ(env, prng, starters);
+		prng.stepQ(2);
+		return starters;
+	}
+
+	static after_consumption(env, prng, entries) {
+		let prngp = prng.dup();
+		this.after_consumptionQ(env, prngp, entries);
+		return prngp;
+	}
+
+	static after_consumptionQ(env, prng, entries) {
+		this._pid_loopQ(env, prng, entries);
+		prng.stepQ(24);
+	}
+
+	static _pid_loopQ(env, prng, entries) {
 		for (let entry of entries) {
 			let trainer_id = this._rand32Q(prng);
 			while (true) {

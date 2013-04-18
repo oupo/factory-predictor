@@ -10,6 +10,6 @@ def sys(cmd) system(cmd) or abort end
 
 prepare_traceur_js
 sys "traceur --experimental --out compiled.js hello.js"
-sys "type traceur.js > compiled2.js"
+sys "type traceur-mini.js > compiled2.js"
 sys "type compiled.js >> compiled2.js"
 sys "node compiled2.js"

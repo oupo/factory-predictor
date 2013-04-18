@@ -23,7 +23,7 @@ export class RoughPredictor {
 		let maybe_players = [...starters, ...enemies.slice(0, -1).flatten()];
 		let results = OneEnemyPredictor.predict(this.env, prng, unchoosable, maybe_players);
 		return results.map(result => {
-			let prngp = FactoryHelper.after_consumption(env, prng, result.chosen);
+			let prngp = FactoryHelper.after_consumption(env, result.prng, result.chosen);
 			return this.predict0(prngp, [...enemies, result.chosen], [...skipped, result.skipped], starters);
 		}).flatten();
 	}
@@ -64,8 +64,8 @@ export class OneEnemyPredictor {
 		} else if (!x.collides_within(this.maybe_players) || skipped.length == this.env.nParty) {
 			return this.predict0(prngp, skipped, [...chosen, x]);
 		} else {
-			let result1 = this.predict0(prngp, skipped, [...chosen, x])
-			let result2 = this.predict0(prngp, [...skipped, x], chosen)
+			let result1 = this.predict0(prngp, skipped, [...chosen, x]);
+			let result2 = this.predict0(prngp, [...skipped, x], chosen);
 			return [...result1, ...result2];
 		}
 	}

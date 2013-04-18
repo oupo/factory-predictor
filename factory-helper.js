@@ -66,15 +66,15 @@ export class FactoryHelper {
 		return starters;
 	}
 
-	static after_consumption(env, prng, entries) {
+	static after_consumption(env, prng, entries, i) {
 		let prngp = prng.dup();
-		this.after_consumptionQ(env, prngp, entries);
+		this.after_consumptionQ(env, prngp, entries, i);
 		return prngp;
 	}
 
-	static after_consumptionQ(env, prng, entries) {
+	static after_consumptionQ(env, prng, entries, i) {
 		this._pid_loopQ(env, prng, entries);
-		prng.stepQ(24);
+		prng.stepQ(i == 0 ? 24 : 6);
 	}
 
 	static _pid_loopQ(env, prng, entries) {

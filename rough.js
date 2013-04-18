@@ -19,11 +19,12 @@ export class RoughPredictor {
 		if (enemies.length == this.env.nBattles) {
 			return [new RoughPredictorResult(prng, enemies, skipped, starters)];
 		}
+		let i = enemies.length;
 		let unchoosable = enemies.last || starters;
-		let maybe_players = [...starters, ...enemies.slice(0, -1).flatten()];
+		let maybe_players = [...starters, ...enemies.slice(0, i-1).flatten()];
 		let results = OneEnemyPredictor.predict(this.env, prng, unchoosable, maybe_players);
 		return results.map(result => {
-			let prngp = FactoryHelper.after_consumption(env, result.prng, result.chosen);
+			let prngp = FactoryHelper.after_consumption(env, result.prng, result.chosen, i);
 			return this.predict0(prngp, [...enemies, result.chosen], [...skipped, result.skipped], starters);
 		}).flatten();
 	}

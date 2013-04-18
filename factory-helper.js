@@ -24,28 +24,36 @@ export class FactoryHelper {
 		});
 	}
 	
-	static choose_entry(env, prng) {
+	static choose_entry(env, prng, battle_index) {
 		let prngp = prng.dup();
-		let x = this.choose_entryQ(env, prngp);
+		let x = this.choose_entryQ(env, prngp, battle_index);
+		return [prngp, x];
+	}
+
+	static choose_entryQ(env, prng, battle_index) {
+		let [start, end] = this._choice_range(env, battle_index);
+		let i = end - 1 - prng.randQ(end - start);
+		return env.allEntries[i];
+	}
+
+	static _choice_range(env, battle_index) {
+		if (battle_index != 7) {
+			return [0, 150];
+		} else {
+			return [150, 250];
+		}
+	}
+	
+	static choose_entries(env, prng, n, battle_index, unchoosable=[]) {
+		let prngp = prng.dup();
+		let x = this.choose_entriesQ(env, prngp, n, battle_index, unchoosable);
 		return [prngp, x];
 	}
 	
-	static choose_entryQ(env, prng) {
-		let i = prng.randQ(env.allEntries.length);
-		let last = env.allEntries.length - 1;
-		return env.allEntries[last - i];
-	}
-	
-	static choose_entries(env, prng, n, unchoosable=[]) {
-		let prngp = prng.dup();
-		let x = this.choose_entriesQ(env, prngp, n, unchoosable);
-		return [prngp, x];
-	}
-	
-	static choose_entriesQ(env, prng, n, unchoosable=[]) {
+	static choose_entriesQ(env, prng, n, battle_index, unchoosable=[]) {
 		let entries = [];
 		while (entries.length < n) {
-			let entry = this.choose_entryQ(env, prng);
+			let entry = this.choose_entryQ(env, prng, battle_index);
 			if (!entry.collides_within([...entries, ...unchoosable])) {
 				entries.push(entry);
 			}
@@ -60,21 +68,21 @@ export class FactoryHelper {
 	}
 
 	static choose_startersQ(env, prng) {
-		let starters = this.choose_entriesQ(env, prng, env.nStarters);
+		let starters = this.choose_entriesQ(env, prng, env.nStarters, 0);
 		this._pid_loopQ(env, prng, starters);
 		prng.stepQ(2);
 		return starters;
 	}
 
-	static after_consumption(env, prng, entries, i) {
+	static after_consumption(env, prng, entries, battle_index) {
 		let prngp = prng.dup();
-		this.after_consumptionQ(env, prngp, entries, i);
+		this.after_consumptionQ(env, prngp, entries, battle_index);
 		return prngp;
 	}
 
-	static after_consumptionQ(env, prng, entries, i) {
+	static after_consumptionQ(env, prng, entries, battle_index) {
 		this._pid_loopQ(env, prng, entries);
-		prng.stepQ(i == 0 ? 24 : 6);
+		prng.stepQ(battle_index == 1 ? 24 : 6);
 	}
 
 	static _pid_loopQ(env, prng, entries) {

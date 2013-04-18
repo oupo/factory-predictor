@@ -134,6 +134,11 @@ export class Util {
 		return "0x" + (this.str_repeat("0", prec - s.length) + s);
 	}
 
+	static dec(n, prec) {
+		var s = String(n);
+		return this.str_repeat("0", prec - s.length) + s;
+	}
+
 	static str_repeat(s, n) {
 		var r = "";
 		for (var i = 0; i < n; i ++) {

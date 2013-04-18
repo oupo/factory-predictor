@@ -19,12 +19,12 @@ export class RoughPredictor {
 		if (enemies.length == this.env.nBattles) {
 			return [new RoughPredictorResult(prng, enemies, skipped, starters)];
 		}
-		let i = enemies.length;
 		let unchoosable = enemies.last || starters;
-		let maybe_players = [...starters, ...enemies.slice(0, i-1).flatten()];
-		let results = OneEnemyPredictor.predict(this.env, prng, unchoosable, maybe_players);
+		let maybe_players = [...starters, ...enemies.slice(0, -1).flatten()];
+		let battle_index = enemies.length + 1;
+		let results = OneEnemyPredictor.predict(this.env, prng, unchoosable, maybe_players, battle_index);
 		return results.map(result => {
-			let prngp = FactoryHelper.after_consumption(env, result.prng, result.chosen, i);
+			let prngp = FactoryHelper.after_consumption(env, result.prng, result.chosen, battle_index);
 			return this.predict0(prngp, [...enemies, result.chosen], [...skipped, result.skipped], starters);
 		}).flatten();
 	}
@@ -41,14 +41,15 @@ export class RoughPredictorResult {
 }
 
 export class OneEnemyPredictor {
-	constructor(env, unchoosable, maybe_players) {
+	constructor(env, unchoosable, maybe_players, battle_index) {
 		this.env = env;
 		this.unchoosable = unchoosable;
 		this.maybe_players = maybe_players;
+		this.battle_index = battle_index;
 	}
 
-	static predict(env, prng, unchoosable, maybe_players) {
-		return new this(env, unchoosable, maybe_players).predict(prng);
+	static predict(env, prng, unchoosable, maybe_players, battle_index) {
+		return new this(env, unchoosable, maybe_players, battle_index).predict(prng);
 	}
 
 	predict(prng) {
@@ -59,7 +60,7 @@ export class OneEnemyPredictor {
 		if (chosen.length == this.env.nParty) {
 			return [new OneEnemyPredictorResult(prng, chosen, skipped)];
 		}
-		let [prngp, x] = FactoryHelper.choose_entry(this.env, prng);
+		let [prngp, x] = FactoryHelper.choose_entry(this.env, prng, this.battle_index);
 		if (x.collides_within([...this.unchoosable, ...chosen, ...skipped])) {
 			return this.predict0(prngp, skipped, chosen);
 		} else if (!x.collides_within(this.maybe_players) || skipped.length == this.env.nParty) {

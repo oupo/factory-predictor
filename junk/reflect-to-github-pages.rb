@@ -1,5 +1,5 @@
 require "fileutils"
-require_relative "../js-version/compile.rb"
+require_relative "../compile.rb"
 
 def sys(cmd) puts cmd; system(cmd) or abort end
 

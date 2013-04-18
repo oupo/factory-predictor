@@ -32,7 +32,8 @@ export class FactoryHelper {
 	
 	static choose_entryQ(env, prng) {
 		let i = prng.randQ(env.allEntries.length);
-		return env.allEntries[i];
+		let last = env.allEntries.length - 1;
+		return env.allEntries[last - i];
 	}
 	
 	static choose_entries(env, prng, n, unchoosable=[]) {

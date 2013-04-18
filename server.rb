@@ -7,7 +7,7 @@ srv = WEBrick::HTTPServer.new(DocumentRoot: "./",
                               Port: 20080)
 srv.mount_proc("/compiled") do |req, res|
   dest_path = req.path.sub(/^\//, "")
-  src_path = File.basename(path).sub(".compiled", "")
+  src_path = File.basename(dest_path).sub(".compiled", "")
   compile src_path
   res.body = IO.binread(dest_path)
   res.content_type = "text/javascript"

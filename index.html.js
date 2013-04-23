@@ -4,6 +4,8 @@ if (!('console' in window)) window.console = {log: x => x}
 
 var env;
 var POKEMON_NAME_TO_ID;
+var gPokemonImage;
+
 function main() {
 	await env = FactoryHelper.buildEnv({
 		nParty: 3,
@@ -12,6 +14,8 @@ function main() {
 		allEntriesURL: "entries.csv?1366277583"
 	});
 	await POKEMON_NAME_TO_ID = load_pokemon_name_to_id();
+	await gPokemonImage = loadImage("icons.png");
+
 	document.body.innerHTML = `
 		<h1>factory-predictor Demo</h1>
 		<form action="" onsubmit="return false">

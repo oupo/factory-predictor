@@ -122,11 +122,11 @@ export class Util {
 			}
 		};
 		xhr.onerror = function() {
-			errback();
+			deferred.errback();
 		};
 		xhr.open("GET", url, true);
 		xhr.send();
-		return deferred;
+		return deferred.createPromise();
 	}
 
 	static hex(n, prec=8) {

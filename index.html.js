@@ -36,6 +36,19 @@ function load_pokemon_name_to_id() {
 	return name_to_id;
 }
 
+function loadImage(url) {
+	var deferred = new Deferred;
+	var image = new Image;
+	image.src = url;
+	image.onload = function() {
+		deferred.callback(image);
+	};
+	image.onerror = function() {
+		deferred.errback();
+	};
+	return deferred.createPromise();
+}
+
 function exec(seed) {
 	var result = Predictor.predict(env, new PRNG(seed));
 	var tree = toTree(env, result);

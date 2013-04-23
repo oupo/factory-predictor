@@ -5,6 +5,7 @@ if (!('console' in window)) window.console = {log: x => x}
 var gEnv;
 var POKEMON_NAME_TO_ID;
 var gPokemonImage;
+var ICON_SIZE = 32;
 
 function main() {
 	await gEnv = FactoryHelper.buildEnv({
@@ -40,6 +41,10 @@ function load_pokemon_name_to_id() {
 	return name_to_id;
 }
 
+function toPokemonId(entry) {
+	return POKEMON_NAME_TO_ID[entry.pokemon];
+}
+
 function loadImage(url) {
 	var deferred = new Deferred;
 	var image = new Image;
@@ -55,12 +60,31 @@ function loadImage(url) {
 
 function exec(seed) {
 	var result = Predictor.predict(gEnv, new PRNG(seed));
-	var tree = toTree(gEnv, result);
-	var dumped = displayTree(gEnv, tree, 0);
-	var pre = document.createElement("pre");
-	pre.textContent = dumped;
+	//var tree = toTree(gEnv, result);
+	var canvas = drawNode(result[0].enemies[0]);
 	document.querySelector("#result").innerHTML = "";
-	document.querySelector("#result").appendChild(pre);
+	document.querySelector("#result").appendChild(canvas);
+}
+
+function drawNode(entries) {
+	var s = 32;
+	var [w, h] = [100, 32];
+	var ctx = newCanvas(w, h);
+	ctx.fillStyle = "#F7E6A3";
+	ctx.fillRect(0, 0, w, h);
+	var startX = (w - s * entries.length) / 2;
+	var y = (h - s) / 2;
+	entries.forEach((entry, i) => {
+		var id = toPokemonId(entry);
+		var x = startX + s * i;
+		ctx.drawImage(gPokemonImage, s * (id - 1), 0, s, s, x, y, s, s);
+	});
+	return ctx.canvas;
+}
+
+function newCanvas(w, h) {
+	var canvas = document.createElement("canvas");
+	return canvas.getContext("2d");
 }
 
 function displayTree(env, tree, nest) {

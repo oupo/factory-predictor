@@ -24,7 +24,7 @@ export class RoughPredictor {
 		let battle_index = enemies.length + 1;
 		let results = OneEnemyPredictor.predict(this.env, prng, unchoosable, maybe_players, battle_index);
 		return results.map(result => {
-			let prngp = FactoryHelper.after_consumption(env, result.prng, result.chosen, battle_index);
+			let prngp = FactoryHelper.after_consumption(this.env, result.prng, result.chosen, battle_index);
 			return this.predict0(prngp, [...enemies, result.chosen], [...skipped, result.skipped], starters);
 		}).flatten();
 	}

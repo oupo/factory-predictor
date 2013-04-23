@@ -2,12 +2,12 @@ import * from "./predictor.js";
 import * from "./util.js";
 if (!('console' in window)) window.console = {log: x => x}
 
-var env;
+var gEnv;
 var POKEMON_NAME_TO_ID;
 var gPokemonImage;
 
 function main() {
-	await env = FactoryHelper.buildEnv({
+	await gEnv = FactoryHelper.buildEnv({
 		nParty: 3,
 		nStarters: 6,
 		nBattles: 7,
@@ -54,9 +54,9 @@ function loadImage(url) {
 }
 
 function exec(seed) {
-	var result = Predictor.predict(env, new PRNG(seed));
-	var tree = toTree(env, result);
-	var dumped = displayTree(env, tree, 0);
+	var result = Predictor.predict(gEnv, new PRNG(seed));
+	var tree = toTree(gEnv, result);
+	var dumped = displayTree(gEnv, tree, 0);
 	var pre = document.createElement("pre");
 	pre.textContent = dumped;
 	document.querySelector("#result").innerHTML = "";

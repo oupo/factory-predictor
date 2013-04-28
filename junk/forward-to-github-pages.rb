@@ -3,8 +3,8 @@ require_relative "../compile.rb"
 
 def sys(cmd) puts cmd; system(cmd) or abort end
 
-html_files = ["simple.html"]
-other_files = ["entries.csv", "pokemon-names.txt"]
+html_files = ["simple.html", "index.html"]
+other_files = ["entries.csv", "pokemon-names.txt", "icons.png"]
 dir = 'c:\users\user\repos\oupo.github.com\factory-predictor'
 
 epoch = Time.now.to_i

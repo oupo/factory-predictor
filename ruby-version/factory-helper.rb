@@ -45,6 +45,15 @@ module FactoryHelper
     }
   end
 
+  def gen_all_entries(n_entries, n_items, n_pokemons)
+    srand 0
+    (0...n_entries).map {|i|
+      item = :"item_#{rand(n_items)}"
+      pokemon = :"{pokemon_#{rand(n_pokemons)}"
+      Entry.new(i, item, pokemon)
+    }
+  end
+
   def collision(a, b)
     a.item == b.item or a.pokemon == b.pokemon
   end
@@ -62,19 +71,22 @@ module FactoryHelper
 
   def choose_entries(env, prng, n, unchoosable=[])
     prngp = prng.dup
-    entries = choose_entries!(env, prngp, n, unchoosable)
-    [prngp, entries]
+    entries, skipped = choose_entries!(env, prngp, n, unchoosable)
+    [prngp, entries, skipped]
   end
 
   def choose_entries!(env, prng, n, unchoosable=[])
     entries = []
+    skipped = []
     while entries.size < n
       entry = choose_entry!(env, prng)
-      if not entry.collides_within?(entries + unchoosable)
+      if entry.collides_within?(entries + unchoosable)
+        skipped.push entry
+      else
         entries.push entry
       end
     end
-    entries
+    [entries, skipped]
   end
 end
 

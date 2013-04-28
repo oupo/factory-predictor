@@ -5,7 +5,37 @@ require_relative "factory-helper.rb"
 
 # 1つの敵のエントリーの決定範囲には同じ種族が複数存在しないという前提を外した試作バージョン
 
-class Predictor
+def main
+  all_entries = FactoryHelper.gen_all_entries(50, 20, 20)
+  env = Env.new(nParty: 3, nStarters: 6, nBattles: 3, all_entries: all_entries)
+
+  unchoosable = []
+  maybe_players = env.all_entries
+  result1 = OneEnemyPredictor.predict(env, PRNG.new(0), unchoosable, maybe_players)
+  puts "#{result1.size} results."
+  result2 = NaiveOneEnemyPredictor.predict(env, PRNG.new(0), unchoosable, maybe_players)
+  puts "#{result2.size} results."
+  p result2.subset?(result1)
+end
+
+def main2
+  all_entries = FactoryHelper.gen_all_entries(150, 150, 50)
+  (3..7).each do |nBattles|
+    print "nBattles = #{nBattles}: "
+    env = Env.new(nParty: 3, nStarters: 6, nBattles: nBattles, all_entries: all_entries)
+    size, time = measure { RoughPredictor.predict(env, PRNG.new(0)).size }
+    puts "#{size} (#{time} sec)"
+  end
+end
+
+def measure
+  start = Time.now
+  x = yield
+  time = Time.now - start
+  [x, time]
+end
+
+class RoughPredictor
   def initialize(env)
     @env = env
   end
@@ -19,22 +49,58 @@ class Predictor
   end
 
   def predict(prng)
+    prng, starters = choose_entries(@env, prng, nStarters)
+    predict0(prng, [], [], starters)
+  end
+
+  Result = Struct.new(:prng, :enemies, :skipped, :starters)
+
+  def predict0(prng, enemies, skipped, starters)
+    if enemies.length == nBattles
+      return [Result.new(prng, enemies, skipped, starters)].to_set
+    end
+    unchoosable = enemies.last || starters
+    maybe_players = starters + enemies[0..-2].flatten
+    results = OneEnemyPredictor.predict(env, prng, unchoosable, maybe_players)
+    results.map {|result|
+      predict0(result.prng, enemies + [result.chosen], skipped + [result.skipped], starters)
+    }.inject(:+)
+  end
+end
+
+class OneEnemyPredictor
+  def initialize(env, unchoosable, maybe_players)
+    @env = env
+    @unchoosable = unchoosable
+    @maybe_players = maybe_players
+  end
+
+  attr_reader :env
+  include EnvMixin 
+  include FactoryHelper
+
+  def self.predict(env, prng, unchoosable, maybe_players)
+    new(env, unchoosable, maybe_players).predict(prng)
+  end
+
+  def predict(prng)
     predict0(prng, [], [])
   end
 
+  Result = Struct.new(:prng, :chosen, :skipped)
+
   def predict0(prng, skipped, chosen)
     if chosen.length == nParty
-      return [chosen].to_set
+      return [Result.new(prng, chosen, skipped)].to_set
     end
     if not coverable?(skipped)
       return [].to_set
     end
     prngp, x = choose_entry(@env, prng)
-    if x.collides_within?(chosen)
+    if x.collides_within?(@unchoosable + chosen) or skipped.include?(x)
       predict0(prngp, skipped, chosen)
-    elsif skipped.include?(x)
-      # まったく同じエントリをスキップしたことがある場合
-      predict0(prngp, skipped, chosen)
+    elsif not x.collides_within?(@maybe_players)
+      predict0(prngp, skipped, chosen + [x])
     else
       result1 = predict0(prngp, skipped, chosen + [x])
       result2 = predict0(prngp, skipped + [x], chosen)
@@ -67,40 +133,29 @@ class Predictor
   end
 end
 
-class NaivePredictor
-  def initialize(env)
+class NaiveOneEnemyPredictor
+  def initialize(env, unchoosable, maybe_players)
     @env = env
+    @unchoosable = unchoosable
+    @maybe_players = maybe_players
   end
 
   attr_reader :env
-  include EnvMixin
+  include EnvMixin 
   include FactoryHelper
+
+  def self.predict(env, prng, unchoosable, maybe_players)
+    new(env, unchoosable, maybe_players).predict(prng)
+  end
 
   def predict(prng)
     result = Set.new
-    env.all_entries.combination(3) do |players|
-      prngp, entries = choose_entries(@env, prng, nParty, players)
-      result.add entries
+    @maybe_players.combination(3) do |players|
+      prngp, entries, skipped = choose_entries(@env, prng, nParty, players + @unchoosable)
+      result.add OneEnemyPredictor::Result.new(prngp, entries, skipped)
     end
     result
   end
 end
 
-def gen_all_entries
-  n_entries = 50
-  n_items = 20
-  n_pokemons = 20
-  srand 0
-  (0...n_entries).map {|i|
-    item = :"item_#{rand(n_items)}"
-    pokemon = :"{pokemon_#{rand(n_pokemons)}"
-    Entry.new(i, item, pokemon)
-  }
-end
-
-env = Env.new(nParty: 3, nStarters: 6, nBattles: 3, all_entries: gen_all_entries())
-result1 = Predictor.new(env).predict(PRNG.new(0))
-puts "#{result1.size} results."
-result2 = NaivePredictor.new(env).predict(PRNG.new(0))
-puts "#{result2.size} results."
-p result2.subset?(result1)
+main() if $0 == __FILE__

@@ -22,11 +22,9 @@ class Predictor
     predict0(prng, [], [])
   end
 
-  Result = Struct.new(:prng, :chosen, :skipped)
-
   def predict0(prng, skipped, chosen)
     if chosen.length == nParty
-      return [Result.new(prng, chosen, skipped)].to_set
+      return [chosen].to_set
     end
     if not coverable?(skipped)
       return [].to_set
@@ -81,13 +79,15 @@ class NaivePredictor
   def predict(prng)
     result = Set.new
     all_entries().combination(3) do |players|
-      result.add choose_entries(prng, nParty, players)
+      prngp, entries = choose_entries(prng, nParty, players)
+      result.add entries
     end
     result
   end
 end
 
-env = Env.new(nParty: 3, nStarters: 6, nBattles: 4)
+FactoryHelper::ALL_ENTRIES.slice!(0, 50)
+env = Env.new(nParty: 3, nStarters: 6, nBattles: 3)
 result1 = Predictor.new(env).predict(PRNG.new(0))
 puts "#{result1.size} results."
 result2 = NaivePredictor.new(env).predict(PRNG.new(0))

@@ -54,7 +54,7 @@ class Predictor
     end
 
     # カバーできるエントリーの個数についての貪欲法でタグを6つ選ぶ
-    nParty.times do |i|
+    (nParty*2).times do |i|
       tags = all_tags - selected_tags
       break if tags.empty?
       tag = tags.max_by {|tag|
@@ -86,7 +86,20 @@ class NaivePredictor
   end
 end
 
-FactoryHelper::ALL_ENTRIES.slice!(0, 50)
+def gen_all_entries
+  n_entries = 50
+  n_items = 20
+  n_pokemons = 20
+  srand 0
+  entries = (0...n_entries).map {|i|
+    item = :"item_#{rand(n_items)}"
+    pokemon = :"{pokemon_#{rand(n_pokemons)}"
+    Entry.new(i, item, pokemon)
+  }
+  FactoryHelper.const_set :ALL_ENTRIES, entries
+end
+
+gen_all_entries()
 env = Env.new(nParty: 3, nStarters: 6, nBattles: 3)
 result1 = Predictor.new(env).predict(PRNG.new(0))
 puts "#{result1.size} results."

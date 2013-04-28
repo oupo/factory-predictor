@@ -23,9 +23,11 @@ class Env
     @nParty = hash[:nParty]
     @nStarters = hash[:nStarters]
     @nBattles = hash[:nBattles]
+    @all_entries = (hash[:all_entries] \
+                     or FactoryHelper.load_entries_database(hash[:all_entries_file]))
   end
 
-  attr_reader :nParty, :nStarters, :nBattles
+  attr_reader :nParty, :nStarters, :nBattles, :all_entries
 end
 
 module EnvMixin
@@ -36,44 +38,38 @@ end
 
 module FactoryHelper
   module_function
-  def _load
-    open("entries.csv", "rb").lines.map.with_index {|line, i|
+  def load_entries_database(filename)
+    open(filename, "rb").lines.map.with_index {|line, i|
       (item, pokemon) = line.split(",").map{|x| Integer(x) }
       Entry.new(i + 1, item, pokemon)
     }
-  end
-
-  ALL_ENTRIES = _load()
-
-  def all_entries
-    ALL_ENTRIES
   end
 
   def collision(a, b)
     a.item == b.item or a.pokemon == b.pokemon
   end
 
-  def choose_entry(prng)
+  def choose_entry(env, prng)
     prngp = prng.dup
-    x = choose_entry!(prngp)
+    x = choose_entry!(env, prngp)
     [prngp, x]
   end
 
-  def choose_entry!(prng)
-    i = prng.rand!(all_entries.size)
-    all_entries[i]
+  def choose_entry!(env, prng)
+    i = prng.rand!(env.all_entries.size)
+    env.all_entries[i]
   end
 
-  def choose_entries(prng, n, unchoosable=[])
+  def choose_entries(env, prng, n, unchoosable=[])
     prngp = prng.dup
-    entries = choose_entries!(prngp, n, unchoosable)
+    entries = choose_entries!(env, prngp, n, unchoosable)
     [prngp, entries]
   end
 
-  def choose_entries!(prng, n, unchoosable=[])
+  def choose_entries!(env, prng, n, unchoosable=[])
     entries = []
     while entries.size < n
-      entry = choose_entry!(prng)
+      entry = choose_entry!(env, prng)
       if not entry.collides_within?(entries + unchoosable)
         entries.push entry
       end

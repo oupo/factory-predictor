@@ -28,7 +28,7 @@ class NaivePredictor
   end
 
   def predict(prng)
-    prng, starters = choose_entries(prng, nStarters)
+    prng, starters = choose_entries(@env, prng, nStarters)
     set = Set.new
     starters.combination(nParty).each do |player|
       each_exchanging do |exchanging|
@@ -49,7 +49,7 @@ class NaivePredictor
     result = []
     unchoosable = starters
     nBattles.times do |i|
-      prng, enemy = choose_entries(prng, nParty, unchoosable)
+      prng, enemy = choose_entries(@env, prng, nParty, unchoosable)
       result.push enemy
       unchoosable = player + enemy
       player = exchange(player, enemy, exchanging[i])
@@ -68,7 +68,7 @@ class NaivePredictor
 end
 
 if $0 == __FILE__
-  env = Env.new(nParty: 3, nStarters: 6, nBattles: 4)
+  env = Env.new(nParty: 3, nStarters: 6, nBattles: 4, all_entries_file: "entries.csv")
   predictor = NaivePredictor.new(env)
   result = predictor.predict(PRNG.new(0))
   pp result

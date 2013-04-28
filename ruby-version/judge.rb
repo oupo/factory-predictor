@@ -150,7 +150,7 @@ end
 if $0 == __FILE__
   require_relative "rough.rb"
   require_relative "naive.rb"
-  env = Env.new(nParty: 3, nStarters: 6, nBattles: 7)
+  env = Env.new(nParty: 3, nStarters: 6, nBattles: 7, all_entries_file: "entries.csv")
   10.times do |i|
     seed = i
     prng = PRNG.new(seed)

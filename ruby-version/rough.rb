@@ -17,7 +17,7 @@ class RoughPredictor
   end
 
   def predict(prng)
-    prng, starters = choose_entries(prng, nStarters)
+    prng, starters = choose_entries(@env, prng, nStarters)
     predict0(prng, [], [], starters)
   end
 
@@ -61,7 +61,7 @@ class OneEnemyPredictor
     if chosen.length == nParty
       return [Result.new(prng, chosen, skipped)].to_set
     end
-    prngp, x = choose_entry(prng)
+    prngp, x = choose_entry(@env, prng)
     if x.collides_within?(@unchoosable + chosen + skipped)
       predict0(prngp, skipped, chosen)
     elsif not x.collides_within?(@maybe_players) or skipped.length == nParty
@@ -76,7 +76,7 @@ end
 
 if $0 == __FILE__
   require_relative "naive.rb"
-  env = Env.new(nParty: 3, nStarters: 6, nBattles: 4)
+  env = Env.new(nParty: 3, nStarters: 6, nBattles: 4, all_entries_file: "entries.csv")
   
   pp RoughPredictor.predict(env, PRNG.new(0)).map(&:enemies)
   exit

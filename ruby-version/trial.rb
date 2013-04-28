@@ -29,7 +29,7 @@ class Predictor
     if not coverable?(skipped)
       return [].to_set
     end
-    prngp, x = choose_entry(prng)
+    prngp, x = choose_entry(@env, prng)
     if x.collides_within?(chosen)
       predict0(prngp, skipped, chosen)
     elsif skipped.include?(x)
@@ -78,8 +78,8 @@ class NaivePredictor
 
   def predict(prng)
     result = Set.new
-    all_entries().combination(3) do |players|
-      prngp, entries = choose_entries(prng, nParty, players)
+    env.all_entries.combination(3) do |players|
+      prngp, entries = choose_entries(@env, prng, nParty, players)
       result.add entries
     end
     result
@@ -91,16 +91,14 @@ def gen_all_entries
   n_items = 20
   n_pokemons = 20
   srand 0
-  entries = (0...n_entries).map {|i|
+  (0...n_entries).map {|i|
     item = :"item_#{rand(n_items)}"
     pokemon = :"{pokemon_#{rand(n_pokemons)}"
     Entry.new(i, item, pokemon)
   }
-  FactoryHelper.const_set :ALL_ENTRIES, entries
 end
 
-gen_all_entries()
-env = Env.new(nParty: 3, nStarters: 6, nBattles: 3)
+env = Env.new(nParty: 3, nStarters: 6, nBattles: 3, all_entries: gen_all_entries())
 result1 = Predictor.new(env).predict(PRNG.new(0))
 puts "#{result1.size} results."
 result2 = NaivePredictor.new(env).predict(PRNG.new(0))

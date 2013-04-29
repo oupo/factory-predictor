@@ -8,14 +8,14 @@ class Judge
     @env = env
     @shop = (0..nBattles).map {|i|
       if i == 0
-        result.starters.map(&:item)
+        result.starters
       else
-        result.enemies[i-1].map(&:item)
+        result.enemies[i-1]
       end
     }
     @gate = (0..nBattles).map {|i|
       if i >= 2
-        result.skipped[i-1].map(&:item)
+        result.skipped[i-1]
       end
     }
   end
@@ -29,22 +29,44 @@ class Judge
   end
 
   def judge
-    schedule = assign_works()
-    schedule != nil and judge0(schedule)
+    succeeded, req, schedule = assign_loop()
+    [succeeded, req, schedule]
+    #schedule != nil and judge0(schedule)
   end
   
-  def assign_works
-    assigner = Assigner.new(@env)
+  def list_requests
+    req = []
     (2..nBattles).each do |i|
-      @gate[i].each do |item|
-        j = (0..i-2).select {|j| @shop[j].include?(item) }.max
-        return nil if j == nil
-        work = Work.new(item, j + 2, i)
-        return nil if not assigner.assignable?(work)
-        assigner.assign work
+      @gate[i].each do |entry|
+        r = []
+        (0..i-2).reverse_each do |j|
+          if entry.collides_within?(@shop[j]) and r.none?{|w| w.item == entry }
+            r << Work.new(entry, j + 2, i)
+          end
+        end
+        req << r
       end
     end
-    assigner.assigned
+    req
+  end
+
+  def assign_loop
+    assigner = Assigner.new(@env)
+    req = list_requests()
+    begin
+      updated = false
+      req.size.times do |i|
+        next if req[i] == nil
+        req[i] = req[i].select {|r| assigner.assignable?(r) }
+        return false if req[i].length == 0
+        if req[i].length == 1
+          assigner.assign(req[i].first)
+          req[i] = nil
+          updated = true
+        end
+      end
+    end while updated
+    [true, req.compact, assigner]
   end
 
   def judge0(schedule)
@@ -148,16 +170,19 @@ class Assigner
 end
 
 if $0 == __FILE__
-  require_relative "rough.rb"
+  require_relative "trial-rough.rb"
   require_relative "naive.rb"
-  env = Env.new(nParty: 3, nStarters: 6, nBattles: 7, all_entries_file: "entries.csv")
-  10.times do |i|
-    seed = i
-    prng = PRNG.new(seed)
-    result = RoughPredictor.predict(env, prng)
-    result_filtered = result.select{|x| Judge.judge(env, x) }.map(&:enemies).to_set
-    puts "#{result_filtered.size} / #{result.size}"
-    #naive_result = NaivePredictor.predict(env, prng)
-    #p result_filtered == naive_result
+  all_entries = FactoryHelper.gen_all_entries(150, 150, 50)
+  env = Env.new(nParty: 3, nStarters: 6, nBattles: 7, all_entries: all_entries)
+  seed = rand(2**32)
+  puts "seed = %#.8x" % seed
+  prng = PRNG.new(seed)
+  result = RoughPredictor.predict(env, prng)
+  p result.size
+  result.each_with_index do |r,i|
+    succeeded, req = Judge.judge(env, r)
+    if req and req.size > 0
+      p req
+    end
   end
 end

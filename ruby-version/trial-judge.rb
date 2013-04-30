@@ -29,9 +29,9 @@ class Judge
   end
 
   def judge
-    schedule = assign_loop()
-    schedule != nil
-    #schedule != nil and judge0(schedule)
+    assigner, req = assign_loop()
+    return false if assigner == nil
+    req_comb(assigner, req).any? {|schedule| judge0(schedule) }
   end
   
   def list_requests
@@ -52,6 +52,18 @@ class Judge
     req
   end
 
+  def req_comb(assigner, req)
+    if req == []
+      return [assigner.assigned]
+    end
+    req[0].product(*req[1..-1]).map {|works|
+      a = assigner.dup
+      if a.assign_works(works)
+        a.assigned
+      end
+    }.compact
+  end
+
   def assign_loop
     assigner = Assigner.new(@env)
     req = list_requests()
@@ -68,11 +80,7 @@ class Judge
         end
       end
     end while updated
-    req = req.compact
-    if req.size > 0
-      raise "req = #{req.inspect}"
-    end
-    assigner.assigned
+    [assigner, req.compact]
   end
 
   def judge0(schedule)
@@ -107,6 +115,8 @@ class Judge
     work = schedule.find{|w| w.head == i }
     if work
       (player - [a]) + [work.entry]
+    elsif player_desertable == []
+      player
     else
       b = sh.max_by{|entry| caught(entry, i) }
       if caught(a, i) < caught(b, i)
@@ -149,6 +159,14 @@ class Assigner
     else
       raise "impossible"
     end
+  end
+
+  def assign_works(works)
+    works.each do |work|
+      return false if assignable?(work)
+      assign work
+    end
+    true
   end
   
   def assignable?(work)
@@ -196,12 +214,8 @@ if $0 == __FILE__
     print "seed = %#.8x: " % seed
     prng = PRNG.new(seed)
     result = RoughPredictor.predict(env, prng)
-    begin
-      result_filtered = result.select{|x| Judge.judge(env, x) }
-      naive_result = NaivePredictor.predict(env, prng)
-      puts "#{result_filtered.size} / #{result.size}; #{naive_result.size}"
-    rescue
-      p $!
-    end
+    result_filtered = result.select{|x| Judge.judge(env, x) }
+    naive_result = NaivePredictor.predict(env, prng)
+    puts "#{naive_result.size} ; #{result_filtered.size} / #{result.size}"
   end
 end

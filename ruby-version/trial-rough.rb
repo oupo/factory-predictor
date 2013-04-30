@@ -20,10 +20,15 @@ def main
 end
 
 def main
+  require_relative "naive.rb"
   all_entries = FactoryHelper.gen_all_entries(150, 150, 50)
-  env = Env.new(nParty: 3, nStarters: 6, nBattles: 7, all_entries: all_entries)
-  seed = rand(2**32)
-  p RoughPredictor.predict(env, PRNG.new(seed)).size
+  env = Env.new(nParty: 3, nStarters: 6, nBattles: 4, all_entries: all_entries)
+  20.times do |i|
+    seed = i
+    result = RoughPredictor.predict(env, PRNG.new(seed))
+    naive_result = NaivePredictor.predict(env, PRNG.new(seed))
+    puts "#{result.size}, #{naive_result.size} (#{naive_result.subset?(result)})"
+  end
 end
 
 def measure
@@ -56,7 +61,8 @@ class RoughPredictor
 
   def predict0(prng, enemies, skipped, scheduler, starters)
     if enemies.length == nBattles
-      return [Result.new(prng, enemies, skipped, starters)].to_set
+      return [enemies].to_set
+      #return [Result.new(prng, enemies, skipped, starters)].to_set
     end
     unchoosable = enemies.last || starters
     maybe_players = starters + enemies[0..-2].flatten

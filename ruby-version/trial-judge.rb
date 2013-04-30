@@ -40,7 +40,7 @@ class Judge
       @gate[i].each do |entry|
         r = []
         (0..i-2).reverse_each do |j|
-          if entry.collides_within?(@shop[j]) and r.none?{|w| w.item == entry }
+          if entry.collides_within?(@shop[j]) and r.none?{|w| w.entry == entry }
             r << Work.new(entry, j + 2, i)
           end
         end
@@ -87,22 +87,22 @@ class Judge
 
   def greedy_select_starters(schedule, i)
     sh = @shop[i-2]
-    items = schedule.select{|w| w.head == i }.map(&:item)
-    player = items
-    player += (sh - items).sort_by{|item| -caught(item, i) }.take(nParty - items.size)
+    entries = schedule.select{|w| w.head == i }.map(&:entry)
+    player = entries
+    player += (sh - entries).sort_by{|entry| -caught(entry, i) }.take(nParty - entries.size)
     player
   end
 
   def greedy_exchange(schedule, i, player)
     sh = @shop[i-2]
     current_works = schedule.select{|w| w.range.include?(i) and w.head != i }
-    player_desertable = player - current_works.map(&:item)
-    a = player_desertable.min_by{|item| caught(item, i) }
+    player_desertable = player - current_works.map(&:entry)
+    a = player_desertable.min_by{|entry| caught(entry, i) }
     work = schedule.find{|w| w.head == i }
     if work
-      (player - [a]) + [work.item]
+      (player - [a]) + [work.entry]
     else
-      b = sh.max_by{|item| caught(item, i) }
+      b = sh.max_by{|entry| caught(entry, i) }
       if caught(a, i) < caught(b, i)
         (player - [a]) + [b]
       else
@@ -111,14 +111,14 @@ class Judge
     end
   end
 
-  def caught(item, pos)
-    (pos..nBattles).find{|i| @shop[i].include?(item) } || nBattles+1
+  def caught(entry, pos)
+    (pos..nBattles).find{|i| @shop[i].include?(entry) } || nBattles+1
   end
 end
 
-# gate iの一つ手前でアイテムaを得て少なくともgate jまで保持し続けるという仕事を
+# gate iの一つ手前でエントリーaを得て少なくともgate jまで保持し続けるという仕事を
 # Work.new(a, i, j)で表す
-Work = Struct.new(:item, :head, :tail)
+Work = Struct.new(:entry, :head, :tail)
 Work.class_eval do
   def range() head..tail end
 end
@@ -163,7 +163,7 @@ class Assigner
   end
 
   def find_similar_work(work)
-    @assigned.find_index {|w| [w.item, w.head] == [work.item, work.head] }
+    @assigned.find_index {|w| [w.entry, w.head] == [work.entry, work.head] }
   end
 
   def pick_similar_work(work)

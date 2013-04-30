@@ -22,20 +22,22 @@ end
 def main
   require_relative "naive.rb"
   all_entries = FactoryHelper.gen_all_entries(150, 150, 50)
-  env = Env.new(nParty: 3, nStarters: 6, nBattles: 4, all_entries: all_entries)
-  20.times do |i|
-    seed = i
-    result = RoughPredictor.predict(env, PRNG.new(seed))
-    naive_result = NaivePredictor.predict(env, PRNG.new(seed))
-    puts "#{result.size}, #{naive_result.size} (#{naive_result.subset?(result)})"
-  end
+  env = Env.new(nParty: 3, nStarters: 6, nBattles: 7, all_entries: all_entries)
+  srand 0
+  time = measure {
+    20.times do
+      seed = rand(2**32)
+      p RoughPredictor.predict(env, PRNG.new(seed)).size
+    end
+  }
+  p time
 end
 
 def measure
   start = Time.now
   x = yield
   time = Time.now - start
-  [x, time]
+  #[time, x]
 end
 
 class RoughPredictor

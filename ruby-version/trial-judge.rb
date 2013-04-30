@@ -30,17 +30,20 @@ class Judge
 
   def judge
     schedule = assign_loop()
-    schedule != nil and judge0(schedule)
+    schedule != nil
+    #schedule != nil and judge0(schedule)
   end
   
   def list_requests
     req = []
     (2..nBattles).each do |i|
-      @gate[i].each do |entry|
+      @gate[i].each do |req_entry|
         r = []
         (0..i-2).reverse_each do |j|
-          if entry.collides_within?(@shop[j]) and r.none?{|w| w.entry == entry }
-            r << Work.new(entry, j + 2, i)
+          @shop[j].each do |entry|
+            if entry.collides_with?(req_entry) and r.none?{|w| w.entry == entry }
+              r << Work.new(entry, j + 2, i)
+            end
           end
         end
         req << r
@@ -65,7 +68,8 @@ class Judge
         end
       end
     end while updated
-    if req.compact.size > 0
+    req = req.compact
+    if req.size > 0
       raise "req = #{req.inspect}"
     end
     assigner.assigned
@@ -82,7 +86,7 @@ class Judge
       end
 
       # gate i
-      return false if not (player & @shop[i]).empty?
+      return false if player.any?{|e| e.collides_within?(@shop[i]) }
     end
     true
   end
@@ -114,7 +118,7 @@ class Judge
   end
 
   def caught(entry, pos)
-    (pos..nBattles).find{|i| @shop[i].include?(entry) } || nBattles+1
+    (pos..nBattles).find{|i| entry.collides_within?(@shop[i]) } || nBattles+1
   end
 end
 
@@ -188,11 +192,16 @@ if $0 == __FILE__
   require_relative "naive.rb"
   all_entries = FactoryHelper.gen_all_entries(150, 150, 50)
   env = Env.new(nParty: 3, nStarters: 6, nBattles: 4, all_entries: all_entries)
-  seed = rand(2**32)
-  puts "seed = %#.8x" % seed
-  prng = PRNG.new(seed)
-  result = RoughPredictor.predict(env, prng)
-  result_filtered = result.select{|x| Judge.judge(env, x) }
-  naive_result = NaivePredictor.predict(env, prng)
-  puts "#{result_filtered.size} / #{result.size}; #{naive_result.size}"
+  20.times do |seed|
+    print "seed = %#.8x: " % seed
+    prng = PRNG.new(seed)
+    result = RoughPredictor.predict(env, prng)
+    begin
+      result_filtered = result.select{|x| Judge.judge(env, x) }
+      naive_result = NaivePredictor.predict(env, prng)
+      puts "#{result_filtered.size} / #{result.size}; #{naive_result.size}"
+    rescue
+      p $!
+    end
+  end
 end

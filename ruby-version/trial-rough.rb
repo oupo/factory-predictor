@@ -2,6 +2,7 @@ require "set"
 require "pp"
 require_relative "prng.rb"
 require_relative "factory-helper.rb"
+require_relative "trial-scheduler.rb"
 
 # 1つの敵のエントリーの決定範囲には同じ種族が複数存在しないという前提を外した試作バージョン
 
@@ -18,14 +19,11 @@ def main
   p result2.subset?(result1)
 end
 
-def main2
+def main
   all_entries = FactoryHelper.gen_all_entries(150, 150, 50)
-  (3..7).each do |nBattles|
-    print "nBattles = #{nBattles}: "
-    env = Env.new(nParty: 3, nStarters: 6, nBattles: nBattles, all_entries: all_entries)
-    size, time = measure { RoughPredictor.predict(env, PRNG.new(0)).size }
-    puts "#{size} (#{time} sec)"
-  end
+  env = Env.new(nParty: 3, nStarters: 6, nBattles: 7, all_entries: all_entries)
+  seed = rand(2**32)
+  p RoughPredictor.predict(env, PRNG.new(seed)).size
 end
 
 def measure
@@ -50,21 +48,26 @@ class RoughPredictor
 
   def predict(prng)
     prng, starters = choose_entries(@env, prng, nStarters)
-    predict0(prng, [], [], starters)
+    scheduler = Scheduler.new(@env, starters)
+    predict0(prng, [], [], scheduler, starters)
   end
 
   Result = Struct.new(:prng, :enemies, :skipped, :starters)
 
-  def predict0(prng, enemies, skipped, starters)
+  def predict0(prng, enemies, skipped, scheduler, starters)
     if enemies.length == nBattles
       return [Result.new(prng, enemies, skipped, starters)].to_set
     end
     unchoosable = enemies.last || starters
     maybe_players = starters + enemies[0..-2].flatten
     results = OneEnemyPredictor.predict(env, prng, unchoosable, maybe_players)
-    results.map {|result|
-      predict0(result.prng, enemies + [result.chosen], skipped + [result.skipped], starters)
-    }.inject(:+)
+
+    results.map {|r|
+      schedulerp = scheduler.add(r.chosen, r.skipped)
+      if schedulerp
+        predict0(r.prng, enemies + [r.chosen], skipped + [r.skipped], schedulerp, starters)
+      end
+    }.compact.inject(:+)
   end
 end
 

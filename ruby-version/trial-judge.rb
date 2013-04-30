@@ -163,7 +163,7 @@ class Assigner
 
   def assign_works(works)
     works.each do |work|
-      return false if assignable?(work)
+      return false if not assignable?(work)
       assign work
     end
     true

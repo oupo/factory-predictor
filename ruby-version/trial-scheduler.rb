@@ -5,6 +5,8 @@ class Scheduler
     @env = env
     @shop = []
     @gate = []
+    @req = []
+    @assigner = Assigner.new(env)
     @shop[0] = starters
     @pos = 0
   end
@@ -18,49 +20,54 @@ class Scheduler
     s.add!(enemy, skipped) ? s : nil
   end
 
-  def add!(enemy, skipped)
-    @pos += 1
-    @shop = @shop.dup
-    @gate = @gate.dup
-    @shop[@pos] = enemy
-    @gate[@pos] = skipped
-    assign_loop()
+  alias orig_dup dup
+  def dup
+    orig_dup().instance_eval {
+      @shop = @shop.dup
+      @gate = @gate.dup
+      @req = @req.dup
+      @assigner = @assigner.dup
+      self
+    }
   end
 
-  def list_requests
-    req = []
-    (2..@pos).each do |i|
-      @gate[i].each do |req_entry|
-        r = []
-        (0..i-2).reverse_each do |j|
-          @shop[j].each do |entry|
-            if entry.collides_with?(req_entry) and r.none?{|w| w.entry == entry }
-              r << Work.new(entry, j + 2, i)
-            end
+  def add!(enemy, skipped)
+    @pos += 1
+    @shop[@pos] = enemy
+    @gate[@pos] = skipped
+    add_req @pos
+    assign_loop
+  end
+
+  def add_req(i)
+    @gate[i].each do |req_entry|
+      r = []
+      (0..i-2).reverse_each do |j|
+        @shop[j].each do |entry|
+          if entry.collides_with?(req_entry) and r.none?{|w| w.entry == entry }
+            r << Work.new(entry, j + 2, i)
           end
         end
-        req << r
       end
+      @req << r
     end
-    req
   end
 
   def assign_loop
-    assigner = Assigner.new(@env)
-    req = list_requests()
     begin
       updated = false
-      req.size.times do |i|
-        next if req[i] == nil
-        req[i] = req[i].select {|r| assigner.assignable?(r) }
-        return false if req[i].length == 0
-        if req[i].length == 1
-          assigner.assign(req[i].first)
-          req[i] = nil
+      @req.size.times do |i|
+        next if @req[i] == nil
+        @req[i] = @req[i].select {|r| @assigner.assignable?(r) }
+        return false if @req[i].length == 0
+        if @req[i].length == 1
+          @assigner.assign(@req[i].first)
+          @req[i] = nil
           updated = true
         end
       end
     end while updated
+    @req.compact!
     true
   end
 end

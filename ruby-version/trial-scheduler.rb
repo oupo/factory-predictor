@@ -19,6 +19,18 @@ class Scheduler
     s = dup()
     s.add!(enemy, skipped) ? s : nil
   end
+  
+  def all_schedule_comb
+    if @req == []
+      return [@assigner.assigned]
+    end
+    @req[0].product(*@req[1..-1]).map {|works|
+      a = @assigner.dup
+      if a.assign_works(works)
+        a.assigned
+      end
+    }.compact
+  end
 
   alias orig_dup dup
   def dup
@@ -36,7 +48,8 @@ class Scheduler
     @shop[@pos] = enemy
     @gate[@pos] = skipped
     add_req @pos
-    assign_loop
+    assign_loop() \
+      and all_schedule_comb().any?{|schedule| Judge.judge(@env, @shop, @pos, schedule) }
   end
 
   def add_req(i)
@@ -69,6 +82,71 @@ class Scheduler
     end while updated
     @req.compact!
     true
+  end
+end
+
+class Judge
+  def initialize(env, shop, len, schedule)
+    @env = env
+    @shop = shop
+    @len = len
+    @schedule = schedule
+  end
+
+  attr_reader :env
+  include EnvMixin 
+  include FactoryHelper
+
+  def self.judge(env, shop, len, schedule)
+    new(env, shop, len, schedule).judge()
+  end
+
+  def judge
+    player = nil
+    (2..@len).each do |i|
+      # gate iの手前のshop
+      if i == 2
+        player = greedy_select_starters(i)
+      else
+        player = greedy_exchange(i, player)
+      end
+
+      # gate i
+      return false if player.any?{|e| e.collides_within?(@shop[i]) }
+    end
+    true
+  end
+
+  def greedy_select_starters(i)
+    sh = @shop[i-2]
+    entries = @schedule.select{|w| w.head == i }.map(&:entry)
+    player = entries
+    player += (sh - entries).sort_by{|entry| -caught(entry, i) }.take(nParty - entries.size)
+    player
+  end
+
+  def greedy_exchange(i, player)
+    sh = @shop[i-2]
+    current_works = @schedule.select{|w| w.range.include?(i) and w.head != i }
+    player_desertable = player - current_works.map(&:entry)
+    a = player_desertable.min_by{|entry| caught(entry, i) }
+    work = @schedule.find{|w| w.head == i }
+    if work
+      (player - [a]) + [work.entry]
+    elsif player_desertable == []
+      player
+    else
+      b = sh.max_by{|entry| caught(entry, i) }
+      if caught(a, i) < caught(b, i)
+        (player - [a]) + [b]
+      else
+        player
+      end
+    end
+  end
+
+  def caught(entry, pos)
+    (pos..@len).find{|i| entry.collides_within?(@shop[i]) } || @len+1
   end
 end
 

@@ -15,11 +15,13 @@ class Scheduler
 
   def add(enemy, skipped)
     s = dup()
-    add!(enemy, skipped) ? s : nil
+    s.add!(enemy, skipped) ? s : nil
   end
 
   def add!(enemy, skipped)
     @pos += 1
+    @shop = @shop.dup
+    @gate = @gate.dup
     @shop[@pos] = enemy
     @gate[@pos] = skipped
     assign_loop()

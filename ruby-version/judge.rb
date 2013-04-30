@@ -51,30 +51,42 @@ class Judge
     player = nil
     (2..nBattles).each do |i|
       # gate iの手前のshop
-      sh = @shop[i-2]
       if i == 2
-        items = schedule.select{|w| w.head == i }.map(&:item)
-        player = items
-        player += (sh - items).sort_by{|item| -caught(item, i) }.take(nParty - items.size)
+        player = greedy_select_starters(schedule, i)
       else
-        current_works = schedule.select{|w| w.range.include?(i) and w.head != i }
-        player_desertable = player - current_works.map(&:item)
-        a = player_desertable.min_by{|item| caught(item, i) }
-        work = schedule.find{|w| w.head == i }
-        if work
-          player = (player - [a]) + [work.item]
-        else
-          b = sh.max_by{|item| caught(item, i) }
-          if caught(a, i) < caught(b, i)
-            player = (player - [a]) + [b]
-          end
-        end
+        player = greedy_exchange(schedule, i, player)
       end
 
       # gate i
       return false if not (player & @shop[i]).empty?
     end
     true
+  end
+
+  def greedy_select_starters(schedule, i)
+    sh = @shop[i-2]
+    items = schedule.select{|w| w.head == i }.map(&:item)
+    player = items
+    player += (sh - items).sort_by{|item| -caught(item, i) }.take(nParty - items.size)
+    player
+  end
+
+  def greedy_exchange(schedule, i, player)
+    sh = @shop[i-2]
+    current_works = schedule.select{|w| w.range.include?(i) and w.head != i }
+    player_desertable = player - current_works.map(&:item)
+    a = player_desertable.min_by{|item| caught(item, i) }
+    work = schedule.find{|w| w.head == i }
+    if work
+      (player - [a]) + [work.item]
+    else
+      b = sh.max_by{|item| caught(item, i) }
+      if caught(a, i) < caught(b, i)
+        (player - [a]) + [b]
+      else
+        player
+      end
+    end
   end
 
   def caught(item, pos)

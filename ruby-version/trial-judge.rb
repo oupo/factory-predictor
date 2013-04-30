@@ -29,9 +29,8 @@ class Judge
   end
 
   def judge
-    succeeded, req, schedule = assign_loop()
-    [succeeded, req, schedule]
-    #schedule != nil and judge0(schedule)
+    schedule = assign_loop()
+    schedule != nil and judge0(schedule)
   end
   
   def list_requests
@@ -58,7 +57,7 @@ class Judge
       req.size.times do |i|
         next if req[i] == nil
         req[i] = req[i].select {|r| assigner.assignable?(r) }
-        return false if req[i].length == 0
+        return nil if req[i].length == 0
         if req[i].length == 1
           assigner.assign(req[i].first)
           req[i] = nil
@@ -66,7 +65,10 @@ class Judge
         end
       end
     end while updated
-    [true, req.compact, assigner]
+    if req.compact.size > 0
+      raise "req = #{req.inspect}"
+    end
+    assigner.assigned
   end
 
   def judge0(schedule)
@@ -185,16 +187,12 @@ if $0 == __FILE__
   require_relative "trial-rough.rb"
   require_relative "naive.rb"
   all_entries = FactoryHelper.gen_all_entries(150, 150, 50)
-  env = Env.new(nParty: 3, nStarters: 6, nBattles: 7, all_entries: all_entries)
+  env = Env.new(nParty: 3, nStarters: 6, nBattles: 4, all_entries: all_entries)
   seed = rand(2**32)
   puts "seed = %#.8x" % seed
   prng = PRNG.new(seed)
   result = RoughPredictor.predict(env, prng)
-  p result.size
-  result.each_with_index do |r,i|
-    succeeded, req = Judge.judge(env, r)
-    if req and req.size > 0
-      p req
-    end
-  end
+  result_filtered = result.select{|x| Judge.judge(env, x) }
+  naive_result = NaivePredictor.predict(env, prng)
+  puts "#{result_filtered.size} / #{result.size}; #{naive_result.size}"
 end

@@ -15,43 +15,45 @@ class Scheduler
   include EnvMixin
   include FactoryHelper
 
-  def add(enemy, skipped)
-    Profiler.mode :Scheduler
-    s = dup()
-    s.add!(enemy, skipped) ? s : nil
-  ensure
-    Profiler.mode :other
+  def new_enemy()
+    dup().new_enemy!
   end
 
-  def add!(enemy, skipped)
+  def add(skipped_entry)
+    dup().add!(skipped_entry)
+  end
+
+  def end_enemy(enemy)
+    dup().end_enemy!(enemy)
+  end
+
+  def new_enemy!
     @pos += 1
-    @shop[@pos] = enemy
-    @gate[@pos] = skipped
-    add_req @pos
-    if not assign_loop()
-      Stats.add @pos, :fail_schedule
-      false
-    elsif all_schedule_comb().none?{|schedule| Judge.judge(@env, @shop, @pos, schedule) }
-      Stats.add @pos, :fail_judge
-      false
-    else
-      Stats.add @pos, :pass
-      true
-    end
+    @gate[@pos] = []
+    self
   end
 
-  def add_req(i)
-    @gate[i].each do |req_entry|
-      r = []
-      (0..i-2).reverse_each do |j|
-        @shop[j].each do |entry|
-          if entry.collides_with?(req_entry) and r.none?{|w| w.entry.collides_with?(entry) }
-            r << Work.new(entry, j + 2, i)
-          end
+  def add!(skipped_entry)
+    @gate[@pos] << skipped_entry
+    add_req @pos, skipped_entry
+    assign_loop() ? self : nil
+  end
+
+  def end_enemy!(enemy)
+    @shop[@pos] = enemy
+    all_schedule_comb().any?{|schedule| Judge.judge(@env, @shop, @pos, schedule) } ? self : nil
+  end
+
+  def add_req(i, req_entry)
+    r = []
+    (0..i-2).reverse_each do |j|
+      @shop[j].each do |entry|
+        if entry.collides_with?(req_entry) and r.none?{|w| w.entry.collides_with?(entry) }
+          r << Work.new(entry, j + 2, i)
         end
       end
-      @req << r
     end
+    @req << r
   end
 
   def assign_loop

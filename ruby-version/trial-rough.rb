@@ -119,13 +119,11 @@ class RoughPredictor
     end
     unchoosable = enemies.last || starters
     maybe_players = starters + enemies[0..-2].flatten
-    results = OneEnemyPredictor.predict(env, prng, unchoosable, maybe_players)
+
+    results = OneEnemyPredictor.predict(env, prng, unchoosable, maybe_players, scheduler)
 
     results.map {|r|
-      schedulerp = scheduler.add(r.chosen, r.skipped)
-      if schedulerp
-        predict0(r.prng, enemies + [r.chosen], skipped + [r.skipped], schedulerp, starters)
-      end
+      predict0(r.prng, enemies + [r.chosen], skipped + [r.skipped], r.scheduler, starters)
     }.compact.inject(:+)
   end
 end
@@ -141,31 +139,37 @@ class OneEnemyPredictor
   include EnvMixin
   include FactoryHelper
 
-  def self.predict(env, prng, unchoosable, maybe_players)
-    new(env, unchoosable, maybe_players).predict(prng)
+  def self.predict(env, prng, unchoosable, maybe_players, scheduler)
+    new(env, unchoosable, maybe_players).predict(prng, scheduler)
   end
 
-  def predict(prng)
-    predict0(prng, [], [])
+  def predict(prng, scheduler)
+    schedulerp = scheduler.new_enemy()
+    predict0(prng, schedulerp, [], [])
   end
 
-  Result = Struct.new(:prng, :chosen, :skipped)
+  Result = Struct.new(:prng, :scheduler, :skipped, :chosen)
 
-  def predict0(prng, skipped, chosen)
+  def predict0(prng, scheduler, skipped, chosen)
     if chosen.length == nParty
-      return [Result.new(prng, chosen, skipped)].to_set
+      schedulerp = scheduler.end_enemy(chosen)
+      if schedulerp == nil
+        return [].to_set
+      else
+        return [Result.new(prng, schedulerp, skipped, chosen)].to_set
+      end
     end
-    if not coverable?(skipped)
+    if scheduler == nil
       return [].to_set
     end
     prngp, x = choose_entry(@env, prng)
     if x.collides_within?(@unchoosable + chosen) or skipped.include?(x)
-      predict0(prngp, skipped, chosen)
+      predict0(prngp, scheduler, skipped, chosen)
     elsif not x.collides_within?(@maybe_players)
-      predict0(prngp, skipped, chosen + [x])
+      predict0(prngp, scheduler, skipped, chosen + [x])
     else
-      result1 = predict0(prngp, skipped, chosen + [x])
-      result2 = predict0(prngp, skipped + [x], chosen)
+      result1 = predict0(prngp, scheduler, skipped, chosen + [x])
+      result2 = predict0(prngp, scheduler.add(x), skipped + [x], chosen)
       result1 + result2
     end
   end

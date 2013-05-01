@@ -19,7 +19,21 @@ def main_naive_cmp
   end
 end
 
-def main
+def main() main_speed end
+def main_speed
+  all_entries = FactoryHelper.gen_all_entries(150, 150, 50)
+  env = Env.new(nParty: 3, nStarters: 6, nBattles: 7, all_entries: all_entries)
+  srand 0
+  20.times do |i|
+    seed = rand(2**32)
+    time, result = measure {
+      RoughPredictor.predict(env, PRNG.new(seed)).to_a
+    }
+    p [result.size, time]
+  end
+end
+
+def main_log
   all_entries = FactoryHelper.gen_all_entries(150, 150, 50)
   env = Env.new(nParty: 3, nStarters: 6, nBattles: 7, all_entries: all_entries)
   srand 0

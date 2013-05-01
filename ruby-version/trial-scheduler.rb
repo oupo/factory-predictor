@@ -48,8 +48,16 @@ class Scheduler
     @shop[@pos] = enemy
     @gate[@pos] = skipped
     add_req @pos
-    assign_loop() \
-      and all_schedule_comb().any?{|schedule| Judge.judge(@env, @shop, @pos, schedule) }
+    if not assign_loop()
+      Stats.add @pos, :fail_schedule
+      false
+    elsif all_schedule_comb().none?{|schedule| Judge.judge(@env, @shop, @pos, schedule) }
+      Stats.add @pos, :fail_judge
+      false
+    else
+    	Stats.add @pos, :pass
+    	true
+    end
   end
 
   def add_req(i)

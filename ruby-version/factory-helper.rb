@@ -11,6 +11,7 @@ Entry.class_eval do
 
   def inspect
     "entry#%03d" % self.id
+    "(#{self.item.to_s[/\d+/]} #{self.pokemon.to_s[/\d+/]})"
   end
 
   def pretty_print(q)

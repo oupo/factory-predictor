@@ -24,20 +24,41 @@ def main
   all_entries = FactoryHelper.gen_all_entries(150, 150, 50)
   env = Env.new(nParty: 3, nStarters: 6, nBattles: 7, all_entries: all_entries)
   srand 0
-  time = measure {
-    20.times do
-      seed = rand(2**32)
-      p RoughPredictor.predict(env, PRNG.new(seed)).size
-    end
+  seed = 0
+  time, result = measure {
+    RoughPredictor.predict(env, PRNG.new(seed)).to_a
   }
-  p time
+  i = rand(result.size)
+  p i
+  r = result[i]
+  puts "startes: #{r.starters}"
+  env.nBattles.times do |i|
+  	puts "#{i+1}: #{r.enemies[i]} #{r.skipped[i]}"
+  end
+  (1..env.nBattles).each do |i|
+    stats = [:pass, :fail_schedule, :fail_judge].map{|n| Stats.stats[[i,n]] || 0 }
+    puts "#{i}: #{stats.join(" ")}"
+  end
 end
 
 def measure
   start = Time.now
   x = yield
   time = Time.now - start
-  #[time, x]
+  [time, x]
+end
+
+module Stats
+  module_function
+  def add(level, status)
+    @stats ||= Hash.new
+    @stats[[level, status]] ||= 0
+    @stats[[level, status]] += 1
+  end
+  
+  def stats
+    @stats
+  end
 end
 
 class RoughPredictor
@@ -63,8 +84,8 @@ class RoughPredictor
 
   def predict0(prng, enemies, skipped, scheduler, starters)
     if enemies.length == nBattles
-      return [enemies].to_set
-      #return [Result.new(prng, enemies, skipped, starters)].to_set
+      #return [enemies].to_set
+      return [Result.new(prng, enemies, skipped, starters)].to_set
     end
     unchoosable = enemies.last || starters
     maybe_players = starters + enemies[0..-2].flatten

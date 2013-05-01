@@ -16,8 +16,11 @@ class Scheduler
   include FactoryHelper
 
   def add(enemy, skipped)
+    Profiler.mode :Scheduler
     s = dup()
     s.add!(enemy, skipped) ? s : nil
+  ensure
+    Profiler.mode :other
   end
 
   def all_schedule_comb
@@ -106,7 +109,10 @@ class Judge
   include FactoryHelper
 
   def self.judge(env, shop, len, schedule)
+    Profiler.mode :Judge
     new(env, shop, len, schedule).judge()
+  ensure
+    Profiler.mode :other
   end
 
   def judge

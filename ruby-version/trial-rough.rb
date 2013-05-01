@@ -39,6 +39,7 @@ def main
     puts "#{i}: #{stats.join(" ")}"
   end
   puts "time: #{time}"
+  p Profiler.result
 end
 
 def measure
@@ -61,6 +62,30 @@ module Stats
   end
 end
 
+module Profiler
+  module_function
+  def start(mode)
+    @count = Hash.new(0.0)
+    @last_mode = mode
+    @last_time = Time.now
+  end
+
+  def mode(mode)
+    time = Time.now
+    @count[@last_mode] += time - @last_time
+    @last_mode = mode
+    @last_time = time
+  end
+
+  def end()
+    mode nil
+  end
+
+  def result
+    @count
+  end
+end
+
 class RoughPredictor
   def initialize(env)
     @env = env
@@ -71,7 +96,10 @@ class RoughPredictor
   include FactoryHelper
 
   def self.predict(env, prng)
+    Profiler.start :other
     new(env).predict(prng)
+  ensure
+    Profiler.end
   end
 
   def predict(prng)
@@ -142,6 +170,7 @@ class OneEnemyPredictor
 
   # タグを6つ適当に選べばentriesをカバーできるかを判定する
   def coverable?(entries)
+    Profiler.mode :coverable?
     all_tags = entries.map(&:item).to_set + entries.map(&:pokemon).to_set
     selected_tags = Set.new
     covered = Set.new
@@ -162,6 +191,8 @@ class OneEnemyPredictor
       covered += linked[tag]
     end
     covered  == entries.to_set
+  ensure
+    Profiler.mode :other
   end
 end
 

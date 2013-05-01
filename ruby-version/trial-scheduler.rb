@@ -65,7 +65,7 @@ class Scheduler
       r = []
       (0..i-2).reverse_each do |j|
         @shop[j].each do |entry|
-          if entry.collides_with?(req_entry) and r.none?{|w| w.entry == entry }
+          if entry.collides_with?(req_entry) and r.none?{|w| w.entry.collides_with?(entry) }
             r << Work.new(entry, j + 2, i)
           end
         end

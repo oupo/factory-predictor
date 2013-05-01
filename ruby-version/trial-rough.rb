@@ -21,7 +21,7 @@ end
 
 def main
   all_entries = FactoryHelper.gen_all_entries(150, 150, 50)
-  env = Env.new(nParty: 3, nStarters: 6, nBattles: 7, all_entries: all_entries)
+  env = Env.new(nParty: 3, nStarters: 6, nBattles: 6, all_entries: all_entries)
   srand 0
   seed = 0
   time, result = measure {
@@ -38,6 +38,7 @@ def main
     stats = [:pass, :fail_schedule, :fail_judge].map{|n| Stats.stats[[i,n]] || 0 }
     puts "#{i}: #{stats.join(" ")}"
   end
+  puts "time: #{time}"
 end
 
 def measure

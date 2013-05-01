@@ -3,24 +3,23 @@ require "pp"
 require_relative "prng.rb"
 require_relative "factory-helper.rb"
 require_relative "trial-scheduler.rb"
+require_relative "naive.rb"
 
 # 1つの敵のエントリーの決定範囲には同じ種族が複数存在しないという前提を外した試作バージョン
 
-def main
-  all_entries = FactoryHelper.gen_all_entries(50, 20, 20)
-  env = Env.new(nParty: 3, nStarters: 6, nBattles: 3, all_entries: all_entries)
-
-  unchoosable = []
-  maybe_players = env.all_entries
-  result1 = OneEnemyPredictor.predict(env, PRNG.new(0), unchoosable, maybe_players)
-  puts "#{result1.size} results."
-  result2 = NaiveOneEnemyPredictor.predict(env, PRNG.new(0), unchoosable, maybe_players)
-  puts "#{result2.size} results."
-  p result2.subset?(result1)
+# ナイーブ版と結果比較
+def main_naive_cmp
+  all_entries = FactoryHelper.gen_all_entries(150, 150, 50)
+  env = Env.new(nParty: 3, nStarters: 6, nBattles: 5, all_entries: all_entries)
+  20.times do |i|
+    seed = i
+    result = RoughPredictor.predict(env, PRNG.new(seed)).map(&:enemies).to_set
+    naive_result = NaivePredictor.predict(env, PRNG.new(seed))
+    puts "#{seed}: #{naive_result.size} #{result.size} (#{naive_result == result})"
+  end
 end
 
 def main
-  require_relative "naive.rb"
   all_entries = FactoryHelper.gen_all_entries(150, 150, 50)
   env = Env.new(nParty: 3, nStarters: 6, nBattles: 7, all_entries: all_entries)
   srand 0
@@ -33,7 +32,7 @@ def main
   r = result[i]
   puts "startes: #{r.starters}"
   env.nBattles.times do |i|
-  	puts "#{i+1}: #{r.enemies[i]} #{r.skipped[i]}"
+    puts "#{i+1}: #{r.enemies[i]} #{r.skipped[i]}"
   end
   (1..env.nBattles).each do |i|
     stats = [:pass, :fail_schedule, :fail_judge].map{|n| Stats.stats[[i,n]] || 0 }

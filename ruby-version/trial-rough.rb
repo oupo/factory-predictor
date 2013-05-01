@@ -54,7 +54,7 @@ module Stats
     @stats[[level, status]] ||= 0
     @stats[[level, status]] += 1
   end
-  
+
   def stats
     @stats
   end
@@ -66,7 +66,7 @@ class RoughPredictor
   end
 
   attr_reader :env
-  include EnvMixin 
+  include EnvMixin
   include FactoryHelper
 
   def self.predict(env, prng)
@@ -107,7 +107,7 @@ class OneEnemyPredictor
   end
 
   attr_reader :env
-  include EnvMixin 
+  include EnvMixin
   include FactoryHelper
 
   def self.predict(env, prng, unchoosable, maybe_players)
@@ -172,7 +172,7 @@ class NaiveOneEnemyPredictor
   end
 
   attr_reader :env
-  include EnvMixin 
+  include EnvMixin
   include FactoryHelper
 
   def self.predict(env, prng, unchoosable, maybe_players)

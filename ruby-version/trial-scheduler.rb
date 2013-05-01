@@ -12,14 +12,14 @@ class Scheduler
   end
 
   attr_reader :env
-  include EnvMixin 
+  include EnvMixin
   include FactoryHelper
 
   def add(enemy, skipped)
     s = dup()
     s.add!(enemy, skipped) ? s : nil
   end
-  
+
   def all_schedule_comb
     if @req == []
       return [@assigner.assigned]
@@ -55,8 +55,8 @@ class Scheduler
       Stats.add @pos, :fail_judge
       false
     else
-    	Stats.add @pos, :pass
-    	true
+      Stats.add @pos, :pass
+      true
     end
   end
 
@@ -102,7 +102,7 @@ class Judge
   end
 
   attr_reader :env
-  include EnvMixin 
+  include EnvMixin
   include FactoryHelper
 
   def self.judge(env, shop, len, schedule)
@@ -173,10 +173,10 @@ class Assigner
   end
 
   attr_reader :env
-  include EnvMixin 
+  include EnvMixin
 
   attr_reader :assigned
-  
+
   def assign(work)
     return if exist_similar_longer_work(work)
     assigned = pick_similar_work(work)
@@ -194,7 +194,7 @@ class Assigner
     end
     true
   end
-  
+
   def assignable?(work)
     return true if exist_similar_longer_work(work)
     assigned = pick_similar_work(work)

@@ -23,29 +23,6 @@ class Scheduler
     Profiler.mode :other
   end
 
-  def all_schedule_comb
-    if @req == []
-      return [@assigner.assigned]
-    end
-    @req[0].product(*@req[1..-1]).map {|works|
-      a = @assigner.dup
-      if a.assign_works(works)
-        a.assigned
-      end
-    }.compact
-  end
-
-  alias orig_dup dup
-  def dup
-    orig_dup().instance_eval {
-      @shop = @shop.dup
-      @gate = @gate.dup
-      @req = @req.dup
-      @assigner = @assigner.dup
-      self
-    }
-  end
-
   def add!(enemy, skipped)
     @pos += 1
     @shop[@pos] = enemy
@@ -93,6 +70,29 @@ class Scheduler
     end while updated
     @req.compact!
     true
+  end
+
+  def all_schedule_comb
+    if @req == []
+      return [@assigner.assigned]
+    end
+    @req[0].product(*@req[1..-1]).map {|works|
+      a = @assigner.dup
+      if a.assign_works(works)
+        a.assigned
+      end
+    }.compact
+  end
+
+  alias orig_dup dup
+  def dup
+    orig_dup().instance_eval {
+      @shop = @shop.dup
+      @gate = @gate.dup
+      @req = @req.dup
+      @assigner = @assigner.dup
+      self
+    }
   end
 end
 

@@ -145,19 +145,14 @@ class OneEnemyPredictor
 
   def predict(prng, scheduler)
     schedulerp = scheduler.new_enemy()
-    predict0(prng, schedulerp, [], [])
+    predict0(prng, schedulerp, [], []).select{|r| r.scheduler != nil }
   end
 
   Result = Struct.new(:prng, :scheduler, :skipped, :chosen)
 
   def predict0(prng, scheduler, skipped, chosen)
     if chosen.length == nParty
-      schedulerp = scheduler.end_enemy(chosen)
-      if schedulerp == nil
-        return [].to_set
-      else
-        return [Result.new(prng, schedulerp, skipped, chosen)].to_set
-      end
+      return [Result.new(prng, scheduler.end_enemy(chosen), skipped, chosen)].to_set
     end
     if scheduler == nil
       return [].to_set

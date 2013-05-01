@@ -65,14 +65,16 @@ end
 module Profiler
   module_function
   def start(mode)
-    @count = Hash.new(0.0)
+    @time = Hash.new(0.0)
+    @count = Hash.new(0)
     @last_mode = mode
     @last_time = Time.now
   end
 
   def mode(mode)
     time = Time.now
-    @count[@last_mode] += time - @last_time
+    @time[@last_mode] += time - @last_time
+    @count[@last_mode] += 1
     @last_mode = mode
     @last_time = time
   end
@@ -82,7 +84,7 @@ module Profiler
   end
 
   def result
-    @count
+    [@time, @count]
   end
 end
 

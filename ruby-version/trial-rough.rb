@@ -21,14 +21,14 @@ end
 
 def main
   all_entries = FactoryHelper.gen_all_entries(150, 150, 50)
-  env = Env.new(nParty: 3, nStarters: 6, nBattles: 6, all_entries: all_entries)
+  env = Env.new(nParty: 3, nStarters: 6, nBattles: 7, all_entries: all_entries)
   srand 0
   seed = 0
   time, result = measure {
     RoughPredictor.predict(env, PRNG.new(seed)).to_a
   }
   i = rand(result.size)
-  p i
+  puts "result[#{i}]"
   r = result[i]
   puts "startes: #{r.starters}"
   env.nBattles.times do |i|
@@ -58,7 +58,7 @@ module Stats
   end
 
   def stats
-    @stats
+    @stats ||= Hash.new
   end
 end
 

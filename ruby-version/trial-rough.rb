@@ -48,10 +48,6 @@ def main_log
   env.nBattles.times do |i|
     puts "#{i+1}: #{r.enemies[i]} #{r.skipped[i]}"
   end
-  (1..env.nBattles).each do |i|
-    stats = [:pass, :fail_schedule, :fail_judge].map{|n| Stats.stats[[i,n]] || 0 }
-    puts "#{i}: #{stats.join(" ")}"
-  end
   puts "time: #{time}"
   p Profiler.result
 end
@@ -61,19 +57,6 @@ def measure
   x = yield
   time = Time.now - start
   [time, x]
-end
-
-module Stats
-  module_function
-  def add(level, status)
-    @stats ||= Hash.new
-    @stats[[level, status]] ||= 0
-    @stats[[level, status]] += 1
-  end
-
-  def stats
-    @stats ||= Hash.new
-  end
 end
 
 module Profiler

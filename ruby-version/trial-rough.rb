@@ -24,7 +24,7 @@ def main_speed
   all_entries = FactoryHelper.gen_all_entries(150, 150, 50)
   env = Env.new(nParty: 3, nStarters: 6, nBattles: 7, all_entries: all_entries)
   srand 0
-  20.times do |i|
+  100.times do |i|
     seed = rand(2**32)
     time, result = measure {
       RoughPredictor.predict(env, PRNG.new(seed)).to_a

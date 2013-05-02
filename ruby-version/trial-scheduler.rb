@@ -20,11 +20,17 @@ class Scheduler
   end
 
   def add(skipped_entry)
+    Profiler.mode :add
     dup().add!(skipped_entry)
+  ensure
+    Profiler.mode :other
   end
 
   def end_enemy(enemy)
+    Profiler.mode :end_enemy
     dup().end_enemy!(enemy)
+  ensure
+    Profiler.mode :other
   end
 
   def new_enemy!
@@ -111,10 +117,7 @@ class Judge
   include FactoryHelper
 
   def self.judge(env, shop, len, schedule)
-    Profiler.mode :Judge
     new(env, shop, len, schedule).judge()
-  ensure
-    Profiler.mode :other
   end
 
   def judge
